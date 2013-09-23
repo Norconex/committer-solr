@@ -1,19 +1,9 @@
-<script>
-(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-ga('create', 'UA-23162620-2', 'github.com');
-ga('send', 'pageview');
-</script>
+Solr Committer
+==============
 
-collectors
-==========
-
-Libraries and applications for collecting, importing, committing, and manipulating data from various data sources (e.g. crawling web sites).
+Solr implementation of Norconex Committer.  Should also work with any Solr-based products, such as LucidWorks.
 
 Websites:
 
-  * Norconex HTTP Collector: http://www.norconex.com/product/collector-http/
-  * Norconex Importer: http://www.norconex.com/product/importer/
+  * Norconex Solr Committer: http://norconex.com/product/committer-solr/
   * Norconex Committer: http://www.norconex.com/product/committer/
