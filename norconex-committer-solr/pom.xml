@@ -349,12 +349,12 @@ along with Norconex Committer Solr. If not, see <http://www.gnu.org/licenses/>.
     <url>http://www.norconex.com</url>
   </organization>
   <scm>
-    <url>https://github.com/Norconex/collectors</url>
-    <connection>scm:git:git@github.com:Norconex/collectors.git</connection>
-    <developerConnection>scm:git:git@github.com:Norconex/collectors.git</developerConnection>
+    <url>https://github.com/Norconex/committer-solr</url>
+    <connection>scm:git:git@github.com:Norconex/committer-solr.git</connection>
+    <developerConnection>scm:git:git@github.com:Norconex/committer-solr.git</developerConnection>
   </scm>
   <issueManagement>
-    <url>https://github.com/Norconex/collectors/issues</url>
+    <url>https://github.com/Norconex/committer-solr/issues</url>
     <system>GitHub</system>
   </issueManagement>
   

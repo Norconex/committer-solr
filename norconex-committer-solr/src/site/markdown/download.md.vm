@@ -34,7 +34,7 @@ Older releases:
 Source
 ------
  
-Source code can be obtained on GitHub: <https://github.com/Norconex/collectors/tree/master/norconex-committer-solr>.
+Source code can be obtained on GitHub: <https://github.com/Norconex/committer-solr>.
   
 Maven users can add the following to their pom.xml:
   
