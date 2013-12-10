@@ -18,10 +18,7 @@
  */
 package com.norconex.committer.solr;
 
-import java.io.IOException;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,7 +29,6 @@ import javax.xml.stream.XMLStreamWriter;
 
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.configuration.XMLConfiguration;
-import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -43,8 +39,11 @@ import org.apache.solr.client.solrj.impl.HttpSolrServer;
 import org.apache.solr.client.solrj.request.UpdateRequest;
 import org.apache.solr.common.SolrInputDocument;
 
-import com.norconex.committer.BaseCommitter;
+import com.norconex.committer.AbstractMappedCommitter;
 import com.norconex.committer.CommitterException;
+import com.norconex.committer.IAddOperation;
+import com.norconex.committer.ICommitOperation;
+import com.norconex.committer.IDeleteOperation;
 import com.norconex.commons.lang.map.Properties;
 
 /**
@@ -60,10 +59,6 @@ import com.norconex.commons.lang.map.Properties;
  *         &lt;param name="(parameter name)"&gt;(parameter value)&lt;/param&gt;
  *         &lt;-- multiple param tags allowed --&gt;
  *      &lt;/solrUpdateURLParams&gt;
- *      &lt;solrDeleteURLParams&gt;
- *         &lt;param name="(parameter name)"&gt;(parameter value)&lt;/param&gt;
- *         &lt;-- multiple param tags allowed --&gt;
- *      &lt;/solrDeleteURLParams&gt;
  *      &lt;idSourceField keep="[false|true]"&gt;
  *         (Name of source field that will be mapped to the Solr "id" field
  *         or whatever "idTargetField" specified.
@@ -87,44 +82,43 @@ import com.norconex.commons.lang.map.Properties;
  *          Default is: content)
  *      &lt;/contentTargetField&gt;
  *      &lt;queueDir&gt;(optional path where to queue files)&lt;/queueDir&gt;
- *      &lt;batchSize&gt;(queue size before sending to Solr)&lt;/batchSize&gt;
- *      &lt;solrBatchSize&gt;
+ *      &lt;queueSize&gt;(queue size before sending to Solr)&lt;/queueSize&gt;
+ *      &lt;commitBatchSize&gt;
  *          (max number of docs to send Solr at once)
- *      &lt;/solrBatchSize&gt;
+ *      &lt;/commitBatchSize&gt;
  *  &lt;/committer&gt;
  * </pre>
  * 
  * @author Pascal Essiembre
  */
 //TODO test if same files can be picked up more than once when multi-threading
-public class SolrCommitter extends BaseCommitter {
+public class SolrCommitter extends AbstractMappedCommitter {
 
     private static final long serialVersionUID = -842307672980791980L;
     private static final Logger LOG = LogManager.getLogger(SolrCommitter.class);
 
-    public static final int DEFAULT_SOLR_BATCH_SIZE = 100;
+    /** Default Solr ID field */
     public static final String DEFAULT_SOLR_ID_FIELD = "id";
+    /** Default Solr content field */
     public static final String DEFAULT_SOLR_CONTENT_FIELD = "content";
 
     private String solrURL;
-    private int solrBatchSize = DEFAULT_SOLR_BATCH_SIZE;
-
-    private final List<QueuedAddedDocument> docsToAdd = 
-            Collections.synchronizedList(new ArrayList<QueuedAddedDocument>());
-    private final List<QueuedDeletedDocument> docsToRemove = 
-            Collections.synchronizedList(
-                    new ArrayList<QueuedDeletedDocument>());
 
     private final Map<String, String> updateUrlParams = 
-            new HashMap<String, String>();
-    private final Map<String, String> deleteUrlParams = 
             new HashMap<String, String>();
     
     private final ISolrServerFactory solrServerFactory;
 
+    /**
+     * Constructor.
+     */
     public SolrCommitter() {
         this(null);
     }
+    /**
+     * Constructor.
+     * @param solrServerFactory Solr server factory
+     */
     public SolrCommitter(ISolrServerFactory solrServerFactory) {
         if (solrServerFactory == null) {
             this.solrServerFactory = new DefaultSolrServerFactory();
@@ -135,112 +129,149 @@ public class SolrCommitter extends BaseCommitter {
         setIdTargetField(DEFAULT_SOLR_ID_FIELD);
     }
 
+    /**
+     * Gets the Solr URL.
+     * @return Solr URL
+     */
     public String getSolrURL() {
         return solrURL;
     }
+    /**
+     * Sets the Solr URL.
+     * @param solrURL solrURL
+     */
     public void setSolrURL(String solrURL) {
         this.solrURL = solrURL;
     }
+
+    /**
+     * Deprecated.
+     * @return commit batch size
+     * @deprecated use {@link #getCommitBatchSize()}
+     */
+    @Deprecated
     public int getSolrBatchSize() {
-        return solrBatchSize;
+        LOG.warn("getSolrBatchSize() is deprecated. Use "
+                + "getCommitBatchSize() instead.");
+        return getCommitBatchSize();
     }
+    /**
+     * Deprecated
+     * @param solrBatchSize commit batch size
+     * @deprecated use {@link #setCommitBatchSize(int)}
+     */
     public void setSolrBatchSize(int solrBatchSize) {
-        this.solrBatchSize = solrBatchSize;
+        LOG.warn("setSolrBatchSize(int) is deprecated. Use "
+                + "setCommitBatchSize(int) instead.");
+        setCommitBatchSize(solrBatchSize);
     }
 
+    
+    /**
+     * Sets URL parameters to be added on Solr HTTP calls.
+     * @param name parameter name
+     * @param value parameter value
+     */
     public void setUpdateUrlParam(String name, String value) {
         updateUrlParams.put(name, value);
     }
+    /**
+     * This method is now deprecated since updates and deletes are sent
+     * on the same HTTP call.  Currently does the same thing as calling
+     * <code>setUpdateUrlParam</code>.
+     * @param name parameter name
+     * @param value parameter value
+     * @deprecated use {@link #setUpdateUrlParam(String, String)}
+     */
+    @Deprecated
     public void setDeleteUrlParam(String name, String value) {
-        deleteUrlParams.put(name, value);
+        LOG.warn("setDeleteUrlParam(String, String) is deprecated. Use "
+                + "setUpdateUrlParam(String, String) instead.");
+        setUpdateUrlParam(name, value);
     }
+    /**
+     * Gets a URL parameter value by its parameter name.
+     * @param name parameter name
+     * @return parameter value
+     */
     public String getUpdateUrlParam(String name) {
         return updateUrlParams.get(name);
     }
+    /**
+     * This method is now deprecated since updates and deletes are sent
+     * on the same HTTP call.  Currently does the same thing as calling
+     * <code>getUpdateUrlParam</code>.
+     * @param name parameter name
+     * @return parameter value
+     * @deprecated use {@link #getUpdateUrlParam(String)}
+     */
+    @Deprecated
     public String getDeleteUrlParam(String name) {
-        return deleteUrlParams.get(name);
+        LOG.warn("getDeleteUrlParam(String) is deprecated. Use "
+                + "getUpdateUrlParam(String) instead.");
+        return getUpdateUrlParam(name);
     }
+    /**
+     * Gets the update URL parameter names.
+     * @return parameter names
+     */
     public Set<String> getUpdateUrlParamNames() {
         return updateUrlParams.keySet();
     }
+    /**
+     * This method is now deprecated since updates and deletes are sent
+     * on the same HTTP call.  Currently does the same thing as calling
+     * <code>getUpdateUrlParamNames</code>.
+     * @return parameter names
+     * @deprecated use {@link #getUpdateUrlParamNames()}
+     */
     public Set<String> getDeleteUrlParamNames() {
-        return deleteUrlParams.keySet();
-    }
-    
-    @Override
-    protected void commitAddedDocument(QueuedAddedDocument document)
-            throws IOException {
-        docsToAdd.add(document);
-        
-        List<QueuedAddedDocument> batch = null;
-        synchronized (docsToAdd) {
-            if (docsToAdd.size() % solrBatchSize == 0) {
-                batch = getBatchToAdd();
-            }
-        }
-        if (batch != null) {
-            persistToSolr(batch);
-        }
+        LOG.warn("getDeleteUrlParamNames() is deprecated. Use "
+                + "getUpdateUrlParamNames() instead.");
+        return getUpdateUrlParamNames();
     }
 
     @Override
-    protected void commitDeletedDocument(QueuedDeletedDocument document)
-            throws IOException {
-        docsToRemove.add(document);
-        
-        List<QueuedDeletedDocument> batch = null;
-        synchronized (docsToRemove) {
-            if (docsToRemove.size() % solrBatchSize == 0) {
-                batch = getBatchToRemove();
-            }
-        }
-        if (batch != null) {
-            deleteFromSolr(batch);
-        }
-    }
+    protected void commitBatch(List<ICommitOperation> batch) {
 
-    private List<QueuedAddedDocument> getBatchToAdd() {
-        List<QueuedAddedDocument> batch = 
-                new ArrayList<QueuedAddedDocument>(docsToAdd);
-        docsToAdd.clear();
-        return batch;
-    }
-
-    private List<QueuedDeletedDocument> getBatchToRemove() {
-        List<QueuedDeletedDocument> batch = 
-                new ArrayList<QueuedDeletedDocument>(docsToRemove);
-        docsToRemove.clear();
-        return batch;
-    }
-
-    
-    private void persistToSolr(List<QueuedAddedDocument> batch) {
         LOG.info("Sending " + batch.size() 
-                + " documents to Solr for update.");
+                + " documents to Solr for update/deletion.");
         try {
-            // Commit Solr batch
             SolrServer server = solrServerFactory.createSolrServer(this);
             UpdateRequest request = new UpdateRequest();
+
+            // Add to request any parameters provided
             for (String name : updateUrlParams.keySet()) {
                 request.setParam(name, updateUrlParams.get(name));
             }
-            for (QueuedAddedDocument doc : batch) {
-                request.add(buildSolrDocument(doc.getMetadata()));
+
+            // Add to request all opeations in batch
+            for (ICommitOperation op : batch) {
+                if (op instanceof IAddOperation) {
+                    request.add(buildSolrDocument(
+                            ((IAddOperation) op).getMetadata()));
+                } else if (op instanceof IDeleteOperation) {
+                    request.deleteById(((IDeleteOperation) op).getReference());
+                } else {
+                    throw new CommitterException("Unsupported operation:" + op);
+                }
             }
+            
             request.process(server);
             server.commit();
-
+          
             // Delete queued documents after commit
-            for (QueuedAddedDocument doc : batch) {
-                doc.deleteFromQueue();
+            for (ICommitOperation op : batch) {
+                op.delete();
             }
             batch.clear();
         } catch (Exception e) {
-            throw new CommitterException(
-                    "Cannot index document batch to Solr.", e);
+          throw new CommitterException(
+                  "Cannot index document batch to Solr.", e);
         }
-        LOG.info("Done sending documents to Solr for update.");
+        LOG.info("Done sending documents to Solr for update.");    
     }
+    
 
     private SolrInputDocument buildSolrDocument(Properties fields) {
         SolrInputDocument doc = new SolrInputDocument();
@@ -251,48 +282,6 @@ public class SolrCommitter extends BaseCommitter {
             }
         }
         return doc;
-    }
-    
-    private void deleteFromSolr(List<QueuedDeletedDocument> batch) {
-        LOG.info("Sending " + batch.size()
-                + " documents to Solr for deletion.");
-        try {
-            SolrServer server = solrServerFactory.createSolrServer(this);
-            // Commit Solr batch
-            UpdateRequest request = new UpdateRequest();
-            for (String name : deleteUrlParams.keySet()) {
-                request.setParam(name, deleteUrlParams.get(name));
-            }
-            for (QueuedDeletedDocument doc : batch) {
-                request.deleteById(doc.getReference());
-            }
-            request.process(server);
-            server.commit();
-
-            // Delete queued documents after commit
-            for (QueuedDeletedDocument doc : batch) {
-                doc.deleteFromQueue();
-            }
-            batch.clear();
-        } catch (Exception e) {
-            throw new CommitterException(
-                    "Cannot delete document batch from Solr.", e);
-        }
-        LOG.info("Done sending documents to Solr for deletion.");
-    }
-
-    @Override
-    protected void commitComplete() {
-        if (!docsToAdd.isEmpty()) {
-            synchronized (docsToAdd) {
-                persistToSolr(getBatchToAdd());
-            }
-        }
-        if (!docsToRemove.isEmpty()) {
-            synchronized (docsToRemove) {
-                deleteFromSolr(getBatchToRemove());
-            }
-        }
     }
 
     @Override
@@ -309,35 +298,35 @@ public class SolrCommitter extends BaseCommitter {
             writer.writeEndElement();
         }
         writer.writeEndElement();
-        
-        writer.writeStartElement("solrDeleteURLParams");
-        for (String name : deleteUrlParams.keySet()) {
-            writer.writeStartElement("param");
-            writer.writeAttribute("name", name);
-            writer.writeCharacters(deleteUrlParams.get(name));
-            writer.writeEndElement();
-        }
-        writer.writeEndElement();
-        
-        writer.writeStartElement("solrBatchSize");
-        writer.writeCharacters(ObjectUtils.toString(getSolrBatchSize()));
-        writer.writeEndElement();
     }
 
     @Override
     protected void loadFromXml(XMLConfiguration xml) {
         setSolrURL(xml.getString("solrURL", null));
-        setSolrBatchSize(xml.getInt("solrBatchSize", DEFAULT_SOLR_BATCH_SIZE));
 
         List<HierarchicalConfiguration> uparams = 
                 xml.configurationsAt("solrUpdateURLParams.param");
         for (HierarchicalConfiguration param : uparams) {
             setUpdateUrlParam(param.getString("[@name]"), param.getString(""));
         }
+
+        //--- Deprecated ---
         List<HierarchicalConfiguration> dparams = 
                 xml.configurationsAt("solrDeleteURLParams.param");
         for (HierarchicalConfiguration param : dparams) {
             setDeleteUrlParam(param.getString("[@name]"), param.getString(""));
+        }
+        String batchSize = xml.getString("batchSize");
+        if (StringUtils.isNotBlank(batchSize)) {
+            LOG.warn("\"batchSize\" is deprecated. Use "
+                    + "\"queueSize\" instead instead.");
+            setQueueSize(Integer.parseInt(batchSize));
+        }
+        String solrBatchSize = xml.getString("solrBatchSize");
+        if (StringUtils.isNotBlank(solrBatchSize)) {
+            LOG.warn("\"solrBatchSize\" is deprecated. Use "
+                    + "\"commitBatchSize\" instead instead.");
+            setCommitBatchSize(Integer.parseInt(solrBatchSize));
         }
     }
 
@@ -346,9 +335,6 @@ public class SolrCommitter extends BaseCommitter {
     public int hashCode() {
         return new HashCodeBuilder()
             .appendSuper(super.hashCode())
-            .append(deleteUrlParams)
-            .append(docsToAdd)
-            .append(docsToRemove)
             .append(solrServerFactory)
             .append(solrURL)
             .append(updateUrlParams)
@@ -369,10 +355,6 @@ public class SolrCommitter extends BaseCommitter {
         SolrCommitter other = (SolrCommitter) obj;
         return new EqualsBuilder()
             .appendSuper(super.equals(obj))
-            .append(deleteUrlParams, other.deleteUrlParams)
-            .append(docsToAdd, other.docsToAdd)
-            .append(docsToRemove, other.docsToRemove)
-            .append(solrBatchSize, other.solrBatchSize)
             .append(solrServerFactory, other.solrServerFactory)
             .append(solrURL, other.solrURL)
             .append(updateUrlParams, other.updateUrlParams)
@@ -381,16 +363,21 @@ public class SolrCommitter extends BaseCommitter {
     
     @Override
     public String toString() {
-        return "SolrCommitter [solrURL=" + solrURL + ", solrBatchSize="
-                + solrBatchSize + ", docsToAdd=" + docsToAdd
-                + ", docsToRemove=" + docsToRemove + ", updateUrlParams="
-                + updateUrlParams + ", deleteUrlParams=" + deleteUrlParams
-                + ", solrServerFactory=" + solrServerFactory
+        return "SolrCommitter [solrURL=" + solrURL + ", updateUrlParams="
+                + updateUrlParams + ", solrServerFactory=" + solrServerFactory
                 + ", " + super.toString() + "]";
     }
 
     //TODO make it a top-level interface?  Make it XMLConfigurable?
+    /**
+     * Factory for creating and initalizing SolrServer instances.
+     */
     public interface ISolrServerFactory extends Serializable {
+        /**
+         * Creats a new SolrServer.
+         * @param solrCommitter this instance
+         * @return a new SolrServer instance
+         */
         SolrServer createSolrServer(SolrCommitter solrCommitter);
     }
     
@@ -441,4 +428,5 @@ public class SolrCommitter extends BaseCommitter {
             return "DefaultSolrServerFactory [server=" + server + "]";
         }
     }
+
 }

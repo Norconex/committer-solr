@@ -30,11 +30,13 @@ import com.norconex.commons.lang.map.Properties;
  * 
  * @author Pascal Dimassimo
  */
+@SuppressWarnings("javadoc")
 public class SolrCommitterTest extends AbstractSolrTestCase {
 
     //TODO test update/delete URL params
     
     static {
+        System.setProperty("solr.allow.unsafe.resourceloading", "true");
         ClassLoader loader = SolrCommitterTest.class.getClassLoader();
         loader.setPackageAssertionStatus("org.apache.solr", true);
         loader.setPackageAssertionStatus("org.apache.lucene", true);
@@ -155,14 +157,13 @@ public class SolrCommitterTest extends AbstractSolrTestCase {
         outCommitter.setIdTargetField("idTargetField");
         outCommitter.setKeepContentSourceField(true);
         outCommitter.setKeepIdSourceField(false);
-        outCommitter.setBatchSize(100);
-        outCommitter.setSolrBatchSize(50);
+        outCommitter.setQueueSize(100);
+        outCommitter.setCommitBatchSize(50);
         outCommitter.setSolrURL("http://solrurl.com/test");
         outCommitter.setUpdateUrlParam("uparam1", "uvalue1");
         outCommitter.setUpdateUrlParam("uparam2", "uvalue2");
-        outCommitter.setDeleteUrlParam("dparam1", "dvalue1");
-        outCommitter.setDeleteUrlParam("dparam2", "dvalue2");
-        outCommitter.setSolrBatchSize(50);
+//        outCommitter.setDeleteUrlParam("dparam1", "dvalue1");
+//        outCommitter.setDeleteUrlParam("dparam2", "dvalue2");
         System.out.println("Writing/Reading this: " + outCommitter);
         ConfigurationUtil.assertWriteRead(outCommitter);
     }

@@ -22,7 +22,7 @@ along with Norconex Committer Solr. If not, see <http://www.gnu.org/licenses/>.
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.norconex.collectors</groupId>
   <artifactId>norconex-committer-solr</artifactId>
-  <version>1.0.1</version>
+  <version>1.0.2-SNAPSHOT</version>
   <name>Norconex Committer Solr</name>
   
   
@@ -30,7 +30,7 @@ along with Norconex Committer Solr. If not, see <http://www.gnu.org/licenses/>.
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <site.baseurl/>
     <currentStableVersion>1.0.1</currentStableVersion>
-    <solr.version>4.1.0</solr.version>
+    <solr.version>4.6.0</solr.version>
   </properties>
   <inceptionYear>2009</inceptionYear>
 
@@ -79,37 +79,6 @@ along with Norconex Committer Solr. If not, see <http://www.gnu.org/licenses/>.
 
   <dependencies>
     <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>4.11</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-        <groupId>commons-io</groupId>
-        <artifactId>commons-io</artifactId>
-        <version>2.4</version>
-    </dependency>
-    <dependency>
-        <groupId>org.apache.commons</groupId>
-        <artifactId>commons-lang3</artifactId>
-        <version>3.1</version>
-    </dependency>
-    <dependency>
-        <groupId>commons-configuration</groupId>
-        <artifactId>commons-configuration</artifactId>
-        <version>1.9</version>
-    </dependency>
-    <dependency>
-        <groupId>log4j</groupId>
-        <artifactId>log4j</artifactId>
-        <version>1.2.17</version>
-    </dependency>
-    <dependency>
-    	<groupId>com.norconex.commons</groupId>
-    	<artifactId>norconex-commons-lang</artifactId>
-    	<version>1.1.0</version>
-    </dependency>
-    <dependency>
     	<groupId>org.apache.solr</groupId>
     	<artifactId>solr-solrj</artifactId>
     	<version>${solr.version}</version>
@@ -117,7 +86,7 @@ along with Norconex Committer Solr. If not, see <http://www.gnu.org/licenses/>.
     <dependency>
     	<groupId>com.norconex.collectors</groupId>
     	<artifactId>norconex-committer</artifactId>
-    	<version>1.0.1</version>
+    	<version>1.1.0-SNAPSHOT</version>
     </dependency>
     <dependency>
         <groupId>org.slf4j</groupId>
