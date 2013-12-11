@@ -176,11 +176,12 @@ public class SolrCommitterTest extends AbstractSolrTestCase {
         metadata.addString(ICommitter.DEFAULT_DOCUMENT_REFERENCE, id);
 
         // Add new doc to Solr
-        committer.queueAdd(id, tempFolder.newFile(), metadata);
+        File file = tempFolder.newFile();
+        committer.queueAdd(id, file, metadata);
         committer.commit();
 
         // After commit, make sure queue is emptied of all files
-        assertTrue(FileUtils.listFiles(queue, null, true).isEmpty());
+        assertFalse("File was not deleted: " + file,  file.exists());
     }
 
     @Test
@@ -191,10 +192,11 @@ public class SolrCommitterTest extends AbstractSolrTestCase {
         metadata.addString(ICommitter.DEFAULT_DOCUMENT_REFERENCE, id);
 
         // Add new doc to Solr
-        committer.queueRemove(id, tempFolder.newFile(), metadata);
+        File file = tempFolder.newFile();
+        committer.queueRemove(id, file, metadata);
         committer.commit();
 
         // After commit, make sure queue is emptied of all files
-        assertTrue(FileUtils.listFiles(queue, null, true).isEmpty());
+        assertFalse("File was not deleted: " + file,  file.exists());
     }
 }
