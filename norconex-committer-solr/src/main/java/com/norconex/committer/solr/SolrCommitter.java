@@ -82,7 +82,7 @@ import com.norconex.commons.lang.map.Properties;
  *          Default is: content)
  *      &lt;/contentTargetField&gt;
  *      &lt;queueDir&gt;(optional path where to queue files)&lt;/queueDir&gt;
- *      &lt;queueSize&gt;(queue size before sending to Solr)&lt;/queueSize&gt;
+ *      &lt;queueSize&gt;(queue size before committing)&lt;/queueSize&gt;
  *      &lt;commitBatchSize&gt;
  *          (max number of docs to send Solr at once)
  *      &lt;/commitBatchSize&gt;
@@ -259,17 +259,11 @@ public class SolrCommitter extends AbstractMappedCommitter {
             
             request.process(server);
             server.commit();
-          
-            // Delete queued documents after commit
-            for (ICommitOperation op : batch) {
-                op.delete();
-            }
-            batch.clear();
         } catch (Exception e) {
           throw new CommitterException(
                   "Cannot index document batch to Solr.", e);
         }
-        LOG.info("Done sending documents to Solr for update.");    
+        LOG.info("Done sending documents to Solr for update/deletion.");    
     }
     
 
