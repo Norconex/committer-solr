@@ -29,7 +29,6 @@ import com.norconex.commons.lang.map.Properties;
  * 
  * @author Pascal Dimassimo
  */
-@SuppressWarnings("javadoc")
 public class SolrCommitterTest extends AbstractSolrTestCase {
 
     //TODO test update/delete URL params
