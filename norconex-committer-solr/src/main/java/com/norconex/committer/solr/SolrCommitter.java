@@ -86,6 +86,8 @@ import com.norconex.commons.lang.map.Properties;
  *      &lt;commitBatchSize&gt;
  *          (max number of docs to send Solr at once)
  *      &lt;/commitBatchSize&gt;
+ *      &lt;maxRetries&gt;(max retries upon commit failures)&lt;/maxRetries&gt;
+ *      &lt;maxRetryWait&gt;(max delay between retries)&lt;/maxRetryWait&gt;
  *  &lt;/committer&gt;
  * </pre>
  * 
@@ -245,7 +247,7 @@ public class SolrCommitter extends AbstractMappedCommitter {
                 request.setParam(name, updateUrlParams.get(name));
             }
 
-            // Add to request all opeations in batch
+            // Add to request all operations in batch
             for (ICommitOperation op : batch) {
                 if (op instanceof IAddOperation) {
                     request.add(buildSolrDocument(
