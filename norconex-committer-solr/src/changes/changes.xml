@@ -7,6 +7,21 @@
   </properties>
   <body>
 
+    <release version="1.1.0" date="2014-??-??" description="Minor release">
+      <action dev="essiembp" type="add">
+        Can now retry on commit failures and specify a delay between retries.
+      </action>
+      <action dev="essiembp" type="update">
+        Upgraded to Committer version 1.2.0 and refactored code accordingly.
+        Upgraded Solr dependencies to 4.7.
+      </action>
+      <action dev="essiembp" type="update">
+        "batchSize configuration option has been renamed to "queueSize".
+        "solrBatchSize" configuration options has been renamed to 
+        "committerBatchSize".
+      </action>
+    </release>
+
     <release version="1.0.1" date="2013-08-23" description="Maintenance release">
       <action dev="essiembp" type="fix">
         Fixed OutOfMemory issue when using the Solr Committer with multiple

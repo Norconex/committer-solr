@@ -22,7 +22,7 @@ along with Norconex Committer Solr. If not, see <http://www.gnu.org/licenses/>.
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.norconex.collectors</groupId>
   <artifactId>norconex-committer-solr</artifactId>
-  <version>1.0.2-SNAPSHOT</version>
+  <version>1.1.0-SNAPSHOT</version>
   <name>Norconex Committer Solr</name>
   
   
@@ -30,7 +30,7 @@ along with Norconex Committer Solr. If not, see <http://www.gnu.org/licenses/>.
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <site.baseurl/>
     <currentStableVersion>1.0.1</currentStableVersion>
-    <solr.version>4.6.0</solr.version>
+    <solr.version>4.7.0</solr.version>
   </properties>
   <inceptionYear>2009</inceptionYear>
 
@@ -75,6 +75,11 @@ along with Norconex Committer Solr. If not, see <http://www.gnu.org/licenses/>.
         <updatePolicy>daily</updatePolicy>
       </snapshots>
     </repository>
+    <repository>  
+       <id>maven-restlet</id>  
+       <name>Public online Restlet repository</name>  
+       <url>http://maven.restlet.org</url>  
+    </repository>
   </repositories>
 
   <dependencies>
@@ -86,7 +91,7 @@ along with Norconex Committer Solr. If not, see <http://www.gnu.org/licenses/>.
     <dependency>
     	<groupId>com.norconex.collectors</groupId>
     	<artifactId>norconex-committer</artifactId>
-    	<version>1.1.0-SNAPSHOT</version>
+    	<version>1.2.0-SNAPSHOT</version>
     </dependency>
     <dependency>
         <groupId>org.slf4j</groupId>
@@ -136,21 +141,38 @@ along with Norconex Committer Solr. If not, see <http://www.gnu.org/licenses/>.
     <pluginManagement>
         <plugins>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-site-plugin</artifactId>
-                <version>3.3</version>
-                <dependencies>
-                  <dependency>
-                    <groupId>org.apache.maven.doxia</groupId>
-                    <artifactId>doxia-site-renderer</artifactId>
-                    <version>1.4</version>
-                  </dependency>
-                  <dependency>
-                    <groupId>org.apache.maven.doxia</groupId>
-                    <artifactId>doxia-module-markdown</artifactId>
-                    <version>1.4</version>
-                  </dependency>
-                </dependencies>                
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-site-plugin</artifactId>
+              <version>3.3</version>
+              <configuration>
+                  <generateReports>true</generateReports>
+                  <templateFile>
+                      ${basedir}/src/site/resources/skin/reflow-modified.vm
+                  </templateFile>
+              </configuration>
+              <dependencies>
+                <dependency>
+                  <groupId>lt.velykis.maven.skins</groupId>
+                  <artifactId>reflow-velocity-tools</artifactId>
+                  <version>1.1.0</version>
+                </dependency>
+                <!-- Reflow skin requires Velocity >= 1.7  -->
+                <dependency>
+                  <groupId>org.apache.velocity</groupId>
+                  <artifactId>velocity</artifactId>
+                  <version>1.7</version>
+                </dependency>
+                <dependency>
+                  <groupId>org.apache.maven.doxia</groupId>
+                  <artifactId>doxia-site-renderer</artifactId>
+                  <version>1.4</version>
+                </dependency>
+                <dependency>
+                  <groupId>org.apache.maven.doxia</groupId>
+                  <artifactId>doxia-module-markdown</artifactId>
+                  <version>1.4</version>
+                </dependency>
+              </dependencies> 
             </plugin>
         </plugins>
     </pluginManagement>
@@ -191,6 +213,10 @@ along with Norconex Committer Solr. If not, see <http://www.gnu.org/licenses/>.
           <overview>${basedir}/src/main/resources/javadoc-overview.html</overview>
           <show>protected</show>
           <detectLinks>true</detectLinks>
+          <links>
+            <link>http://lucene.apache.org/solr/4_7_0/solr-core/</link>
+            <link>http://lucene.apache.org/solr/4_7_0/solr-test-framework/</link>
+          </links>          
         </configuration>
         <executions>
           <execution>
@@ -284,6 +310,10 @@ along with Norconex Committer Solr. If not, see <http://www.gnu.org/licenses/>.
           <overview>${basedir}/src/main/resources/javadoc-overview.html</overview>
           <show>protected</show>
           <detectLinks>true</detectLinks>
+          <links>
+            <link>http://lucene.apache.org/solr/4_7_0/solr-core/</link>
+            <link>http://lucene.apache.org/solr/4_7_0/solr-test-framework/</link>
+          </links>          
         </configuration>
         <reportSets>
           <reportSet>

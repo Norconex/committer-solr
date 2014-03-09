@@ -1,41 +1,50 @@
-<!---
+#*
  Copyright 2010-2013 Norconex Inc.
  
- This file is part of Norconex JEF.
+ This file is part of Norconex Solr Committer.
  
- Norconex JEF is free software: you can redistribute it and/or modify
+Norconex Solr Committer is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
  the Free Software Foundation, either version 3 of the License, or
  (at your option) any later version.
  
- Norconex JEF is distributed in the hope that it will be useful, 
+Norconex Solr Committer is distributed in the hope that it will be useful, 
  but WITHOUT ANY WARRANTY; without even the implied warranty of 
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  GNU General Public License for more details.
  
  You should have received a copy of the GNU General Public License
- along with Norconex JEF. If not, see <http://www.gnu.org/licenses/>.
--->
+ along with Norconex Solr Committer. If not, see <http://www.gnu.org/licenses/>.
+*#
+#set($h1 = '#')
+#set($h2 = '##')
+#set($h3 = '###')
+#set($h4 = '####')
+#set($releasePath = "http://norconex.s3.amazonaws.com/repo/release/com/norconex/collectors/norconex-committer-solr")
 <head><title>Download</title><meta name="Author" content="Norconex Inc." /></head> 
 
-#parse("adsense.html")
 
-Download
-=========
+$h2 Binaries
 
-Latest stable release
-   
-  * [${currentStableVersion}](http://norconex.s3.amazonaws.com/repo/release/com/norconex/collectors/norconex-committer-solr/${currentStableVersion}/norconex-committer-solr-${currentStableVersion}.zip)
+**[Download Latest Release ${currentStableVersion}]($releasePath/${currentStableVersion}/norconex-committer-solr-${currentStableVersion}.zip)**
 
-Older releases:
+  * Can now retry on commit failures and specify a delay between retries.
+  * [View all changes]((changes-report.html))
+
+**Older Releases**
+
+  * [1.0.1]($releasePath/1.0.1/norconex-committer-solr-1.0.1.zip)<small>
+    [[Release Notes](changes-report.html#a1.0.1)]</small>
+  * [1.0.0]($releasePath/1.0.0/norconex-committer-solr-1.0.0.zip)<small>
+    [[Release Notes](changes-report.html#a1.0.0)]</small>
+
+
+<a name="source"></a>
   
-  * [1.0.0](http://norconex.s3.amazonaws.com/repo/release/com/norconex/collectors/norconex-committer-solr/1.0.0/norconex-committer-solr-1.0.0.zip)
+$h2 Source
 
-Source
-------
- 
-Source code can be obtained on GitHub: <https://github.com/Norconex/committer-solr>.
-  
+Source code can be obtained on [GitHub](https://github.com/Norconex/committer-solr).
+
 Maven users can add the following to their pom.xml:
   
     <repository>  
