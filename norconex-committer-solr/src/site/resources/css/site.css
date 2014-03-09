@@ -88,13 +88,13 @@
 
 
 /* -------------- FIX/MODIF TO reflow-skin.css ------------------------- */
-.project-norconex-committer-idol h1[id]:before,
-.project-norconex-committer-idol h2[id]:before,
-.project-norconex-committer-idol h3[id]:before,
-.project-norconex-committer-idol h4[id]:before,
-.project-norconex-committer-idol h5[id]:before,
-.project-norconex-committer-idol h6[id]:before,
-.project-norconex-committer-idol a[name]:before {
+.project-norconex-committer-solr h1[id]:before,
+.project-norconex-committer-solr h2[id]:before,
+.project-norconex-committer-solr h3[id]:before,
+.project-norconex-committer-solr h4[id]:before,
+.project-norconex-committer-solr h5[id]:before,
+.project-norconex-committer-solr h6[id]:before,
+.project-norconex-committer-solr a[name]:before {
     display:block; 
     content:""; 
     height:0px; 
@@ -113,15 +113,15 @@
 
 
 /* 
-body.project-norconex-committer-idol {
+body.project-norconex-committer-solr {
   padding-top: 42px;
   padding-bottom: 20px;
 }
 
-.project-norconex-committer-idol header.jumbotron.subhead #banner.row {
+.project-norconex-committer-solr header.jumbotron.subhead #banner.row {
   margin-top: 5px;
 }
-.project-norconex-committer-idol header.jumbotron.subhead ul.breadcrumb {
+.project-norconex-committer-solr header.jumbotron.subhead ul.breadcrumb {
   height: 0px;
   background-color: #ffffff;
   border-width: 0px;

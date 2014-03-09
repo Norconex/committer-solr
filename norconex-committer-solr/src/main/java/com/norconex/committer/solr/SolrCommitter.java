@@ -297,6 +297,7 @@ public class SolrCommitter extends AbstractMappedCommitter {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     protected void loadFromXml(XMLConfiguration xml) {
         setSolrURL(xml.getString("solrURL", null));
 
