@@ -1,4 +1,4 @@
-/* Copyright 2010-2013 Norconex Inc.
+/* Copyright 2010-2014 Norconex Inc.
  * 
  * This file is part of Norconex Committer Solr.
  * 
@@ -59,18 +59,19 @@ import com.norconex.commons.lang.map.Properties;
  *         &lt;param name="(parameter name)"&gt;(parameter value)&lt;/param&gt;
  *         &lt;-- multiple param tags allowed --&gt;
  *      &lt;/solrUpdateURLParams&gt;
- *      &lt;idSourceField keep="[false|true]"&gt;
- *         (Name of source field that will be mapped to the Solr "id" field
- *         or whatever "idTargetField" specified.
- *         Default is the document reference metadata field: 
- *         "document.reference".  Once re-mapped, the metadata source field is 
+ *      &lt;sourceReferenceField keep="[false|true]"&gt;
+ *         (Optional name of field that contains the document reference, when 
+ *         the default document reference is not used.  The reference value
+ *         will be mapped to Solr "id" field, or the "targetReferenceField" 
+ *         specified.
+ *         Once re-mapped, this metadata source field is 
  *         deleted, unless "keep" is set to <code>true</code>.)
- *      &lt;/idSourceField&gt;
- *      &lt;idTargetField&gt;
+ *      &lt;/sourceReferenceField&gt;
+ *      &lt;targetReferenceField&gt;
  *         (Name of Solr target field where the store a document unique 
  *         identifier (idSourceField).  If not specified, default is "id".) 
- *      &lt;/idTargetField&gt;
- *      &lt;contentSourceField keep="[false|true]&gt;
+ *      &lt;/targetReferenceField&gt;
+ *      &lt;contentSourceField keep="[false|true]&gt";
  *         (If you wish to use a metadata field to act as the document 
  *         "content", you can specify that field here.  Default 
  *         does not take a metadata field but rather the document content.
@@ -81,11 +82,11 @@ import com.norconex.commons.lang.map.Properties;
  *         (Solr target field name for a document content/body.
  *          Default is: content)
  *      &lt;/contentTargetField&gt;
- *      &lt;queueDir&gt;(optional path where to queue files)&lt;/queueDir&gt;
- *      &lt;queueSize&gt;(queue size before committing)&lt;/queueSize&gt;
  *      &lt;commitBatchSize&gt;
  *          (max number of docs to send Solr at once)
  *      &lt;/commitBatchSize&gt;
+ *      &lt;queueDir&gt;(optional path where to queue files)&lt;/queueDir&gt;
+ *      &lt;queueSize&gt;(max queue size before committing)&lt;/queueSize&gt;
  *      &lt;maxRetries&gt;(max retries upon commit failures)&lt;/maxRetries&gt;
  *      &lt;maxRetryWait&gt;(max delay between retries)&lt;/maxRetryWait&gt;
  *  &lt;/committer&gt;
@@ -128,7 +129,7 @@ public class SolrCommitter extends AbstractMappedCommitter {
             this.solrServerFactory = solrServerFactory;
         }
         setContentTargetField(DEFAULT_SOLR_CONTENT_FIELD);
-        setIdTargetField(DEFAULT_SOLR_ID_FIELD);
+        setTargetReferenceField(DEFAULT_SOLR_ID_FIELD);
     }
 
     /**

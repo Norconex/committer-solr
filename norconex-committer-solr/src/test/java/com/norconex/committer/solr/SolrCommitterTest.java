@@ -1,9 +1,10 @@
 package com.norconex.committer.solr;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.embedded.EmbeddedSolrServer;
@@ -18,7 +19,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import com.norconex.committer.ICommitter;
 import com.norconex.committer.solr.SolrCommitter.ISolrServerFactory;
 import com.norconex.commons.lang.config.ConfigurationUtil;
 import com.norconex.commons.lang.map.Properties;
@@ -81,17 +81,20 @@ public class SolrCommitterTest extends AbstractSolrTestCase {
     public void testCommitAdd() throws Exception {
 
         String content = "hello world!";
-        File file = createFile(content);
-
+        InputStream is = IOUtils.toInputStream(content);
+        
         String id = "1";
         Properties metadata = new Properties();
-        metadata.addString(ICommitter.DEFAULT_DOCUMENT_REFERENCE, id);
+        metadata.addString("myreference", id);
 
+        
         // Add new doc to Solr
-        committer.queueAdd(id, file, metadata);
+        committer.add(id, is, metadata);
 
         committer.commit();
 
+        IOUtils.closeQuietly(is);
+        
         // Check that it's in Solr
         SolrDocumentList results = queryId(id);
         assertEquals(1, results.getNumFound());
@@ -116,24 +119,15 @@ public class SolrCommitterTest extends AbstractSolrTestCase {
         server.commit();
 
         // Queue it to be deleted
-        File file = createFile(content);
         Properties metadata = new Properties();
-        metadata.addString(ICommitter.DEFAULT_DOCUMENT_REFERENCE, id);
-        committer.queueRemove(id, file, metadata);
+        metadata.addString("myreference", id);
+        committer.remove(id, metadata);
 
         committer.commit();
 
         // Check that it's remove from Solr
         SolrDocumentList results = queryId(id);
         assertEquals(0, results.getNumFound());
-    }
-
-    private File createFile(String content) throws IOException {
-        File file = tempFolder.newFile();
-        FileWriter writer = new FileWriter(file);
-        writer.write(content);
-        writer.close();
-        return file;
     }
 
     private SolrDocumentList queryId(String id) throws SolrServerException {
@@ -151,10 +145,10 @@ public class SolrCommitterTest extends AbstractSolrTestCase {
         outCommitter.setQueueDir("C:\\FakeTestDirectory\\");
         outCommitter.setContentSourceField("contentSourceField");
         outCommitter.setContentTargetField("contentTargetField");
-        outCommitter.setIdSourceField("idTargetField");
-        outCommitter.setIdTargetField("idTargetField");
+        outCommitter.setSourceReferenceField("idTargetField");
+        outCommitter.setTargetReferenceField("idTargetField");
         outCommitter.setKeepContentSourceField(true);
-        outCommitter.setKeepIdSourceField(false);
+        outCommitter.setKeepReferenceSourceField(false);
         outCommitter.setQueueSize(100);
         outCommitter.setCommitBatchSize(50);
         outCommitter.setSolrURL("http://solrurl.com/test");
@@ -166,35 +160,4 @@ public class SolrCommitterTest extends AbstractSolrTestCase {
         ConfigurationUtil.assertWriteRead(outCommitter);
     }
     
-    @Test
-    public void testRemoveQueuedFilesAfterAdd() throws Exception {
-
-        String id = "1";
-        Properties metadata = new Properties();
-        metadata.addString(ICommitter.DEFAULT_DOCUMENT_REFERENCE, id);
-
-        // Add new doc to Solr
-        File file = tempFolder.newFile();
-        committer.queueAdd(id, file, metadata);
-        committer.commit();
-
-        // After commit, make sure queue is emptied of all files
-        assertFalse("File was not deleted: " + file,  file.exists());
-    }
-
-    @Test
-    public void testRemoveQueuedFilesAfterDelete() throws Exception {
-
-        String id = "1";
-        Properties metadata = new Properties();
-        metadata.addString(ICommitter.DEFAULT_DOCUMENT_REFERENCE, id);
-
-        // Add new doc to Solr
-        File file = tempFolder.newFile();
-        committer.queueRemove(id, file, metadata);
-        committer.commit();
-
-        // After commit, make sure queue is emptied of all files
-        assertFalse("File was not deleted: " + file,  file.exists());
-    }
 }
