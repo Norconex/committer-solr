@@ -85,7 +85,7 @@ public class SolrCommitterTest extends AbstractSolrTestCase {
         
         String id = "1";
         Properties metadata = new Properties();
-        metadata.addString("myreference", id);
+        metadata.addString("id", id);
 
         
         // Add new doc to Solr
@@ -120,7 +120,7 @@ public class SolrCommitterTest extends AbstractSolrTestCase {
 
         // Queue it to be deleted
         Properties metadata = new Properties();
-        metadata.addString("myreference", id);
+        metadata.addString("id", id);
         committer.remove(id, metadata);
 
         committer.commit();
