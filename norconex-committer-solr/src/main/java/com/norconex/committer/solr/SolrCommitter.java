@@ -148,49 +148,12 @@ public class SolrCommitter extends AbstractMappedCommitter {
     }
 
     /**
-     * Deprecated.
-     * @return commit batch size
-     * @deprecated use {@link #getCommitBatchSize()}
-     */
-    @Deprecated
-    public int getSolrBatchSize() {
-        LOG.warn("getSolrBatchSize() is deprecated. Use "
-                + "getCommitBatchSize() instead.");
-        return getCommitBatchSize();
-    }
-    /**
-     * Deprecated
-     * @param solrBatchSize commit batch size
-     * @deprecated use {@link #setCommitBatchSize(int)}
-     */
-    public void setSolrBatchSize(int solrBatchSize) {
-        LOG.warn("setSolrBatchSize(int) is deprecated. Use "
-                + "setCommitBatchSize(int) instead.");
-        setCommitBatchSize(solrBatchSize);
-    }
-
-    
-    /**
      * Sets URL parameters to be added on Solr HTTP calls.
      * @param name parameter name
      * @param value parameter value
      */
     public void setUpdateUrlParam(String name, String value) {
         updateUrlParams.put(name, value);
-    }
-    /**
-     * This method is now deprecated since updates and deletes are sent
-     * on the same HTTP call.  Currently does the same thing as calling
-     * <code>setUpdateUrlParam</code>.
-     * @param name parameter name
-     * @param value parameter value
-     * @deprecated use {@link #setUpdateUrlParam(String, String)}
-     */
-    @Deprecated
-    public void setDeleteUrlParam(String name, String value) {
-        LOG.warn("setDeleteUrlParam(String, String) is deprecated. Use "
-                + "setUpdateUrlParam(String, String) instead.");
-        setUpdateUrlParam(name, value);
     }
     /**
      * Gets a URL parameter value by its parameter name.
@@ -201,37 +164,11 @@ public class SolrCommitter extends AbstractMappedCommitter {
         return updateUrlParams.get(name);
     }
     /**
-     * This method is now deprecated since updates and deletes are sent
-     * on the same HTTP call.  Currently does the same thing as calling
-     * <code>getUpdateUrlParam</code>.
-     * @param name parameter name
-     * @return parameter value
-     * @deprecated use {@link #getUpdateUrlParam(String)}
-     */
-    @Deprecated
-    public String getDeleteUrlParam(String name) {
-        LOG.warn("getDeleteUrlParam(String) is deprecated. Use "
-                + "getUpdateUrlParam(String) instead.");
-        return getUpdateUrlParam(name);
-    }
-    /**
      * Gets the update URL parameter names.
      * @return parameter names
      */
     public Set<String> getUpdateUrlParamNames() {
         return updateUrlParams.keySet();
-    }
-    /**
-     * This method is now deprecated since updates and deletes are sent
-     * on the same HTTP call.  Currently does the same thing as calling
-     * <code>getUpdateUrlParamNames</code>.
-     * @return parameter names
-     * @deprecated use {@link #getUpdateUrlParamNames()}
-     */
-    public Set<String> getDeleteUrlParamNames() {
-        LOG.warn("getDeleteUrlParamNames() is deprecated. Use "
-                + "getUpdateUrlParamNames() instead.");
-        return getUpdateUrlParamNames();
     }
 
     @Override
@@ -306,25 +243,6 @@ public class SolrCommitter extends AbstractMappedCommitter {
                 xml.configurationsAt("solrUpdateURLParams.param");
         for (HierarchicalConfiguration param : uparams) {
             setUpdateUrlParam(param.getString("[@name]"), param.getString(""));
-        }
-
-        //--- Deprecated ---
-        List<HierarchicalConfiguration> dparams = 
-                xml.configurationsAt("solrDeleteURLParams.param");
-        for (HierarchicalConfiguration param : dparams) {
-            setDeleteUrlParam(param.getString("[@name]"), param.getString(""));
-        }
-        String batchSize = xml.getString("batchSize");
-        if (StringUtils.isNotBlank(batchSize)) {
-            LOG.warn("\"batchSize\" is deprecated. Use "
-                    + "\"queueSize\" instead instead.");
-            setQueueSize(Integer.parseInt(batchSize));
-        }
-        String solrBatchSize = xml.getString("solrBatchSize");
-        if (StringUtils.isNotBlank(solrBatchSize)) {
-            LOG.warn("\"solrBatchSize\" is deprecated. Use "
-                    + "\"commitBatchSize\" instead instead.");
-            setCommitBatchSize(Integer.parseInt(solrBatchSize));
         }
     }
 
