@@ -97,7 +97,6 @@ import com.norconex.commons.lang.map.Properties;
 //TODO test if same files can be picked up more than once when multi-threading
 public class SolrCommitter extends AbstractMappedCommitter {
 
-    private static final long serialVersionUID = -842307672980791980L;
     private static final Logger LOG = LogManager.getLogger(SolrCommitter.class);
 
     /** Default Solr ID field */
