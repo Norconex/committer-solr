@@ -296,7 +296,7 @@ public class SolrCommitter extends AbstractMappedCommitter {
         SolrServer createSolrServer(SolrCommitter solrCommitter);
     }
     
-    class DefaultSolrServerFactory implements ISolrServerFactory {
+    static class DefaultSolrServerFactory implements ISolrServerFactory {
         private static final long serialVersionUID = 5820720860417411567L;
         private SolrServer server;
         @Override
