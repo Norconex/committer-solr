@@ -69,8 +69,8 @@ the Solr Committer (LucidWorks specific instructions further down):
       </solrDeleteURLParams>
       <idSourceField keep="[false|true]">...</idSourceField>
       <idTargetField>...</idTargetField>
-      <contentSourceField keep="[false|true]">...</contentSourceField>
-      <contentTargetField>...</contentTargetField>
+      <sourceContentField keep="[false|true]">...</sourceContentField>
+      <targetContentField>...</targetContentField>
       <queueDir>...</queueDir>
       <queueSize>(queue size before committing)</queueSize>
       <commitBatchSize>...</commitBatchSize>
@@ -87,8 +87,8 @@ Tag descriptions:
 | `solrDeleteURLParams` | Optional Solr delete URL arguments. |
 | `idSourceField` | Name of source field that will be mapped to the Solr target id field. Default is the document reference the Committer stores as *committer.reference*. Once re-mapped, the metadata source field is deleted, unless *keep* is set to true.|
 | `idTargetField` | Name of target id field. Default is *id*. |
-| `contentSourceField` | Solr source field name for a document content/body. Default is not a field, but rather the document body content. Once re-mapped, the metadata source field is deleted, unless *keep* is set to true.|
-| `contentTargetField` | Solr target field name for a document content/body. Default is: content. |
+| `sourceContentField` | Solr source field name for a document content/body. Default is not a field, but rather the document body content. Once re-mapped, the metadata source field is deleted, unless *keep* is set to true.|
+| `targetContentField` | Solr target field name for a document content/body. Default is: content. |
 | `queueDir` | Path where to queue files before sending them to Solr. Default is: ./committer-queue|
 | `queueSize` | Number of documents or deletes to queue before sending to Solr. Default is: 1000.|
 | `commitBatchSize` | Maximum number of documents to send Solr at once. Default is: 100.|

@@ -71,17 +71,17 @@ import com.norconex.commons.lang.map.Properties;
  *         (Name of Solr target field where the store a document unique 
  *         identifier (idSourceField).  If not specified, default is "id".) 
  *      &lt;/targetReferenceField&gt;
- *      &lt;contentSourceField keep="[false|true]&gt";
+ *      &lt;sourceContentField keep="[false|true]&gt";
  *         (If you wish to use a metadata field to act as the document 
  *         "content", you can specify that field here.  Default 
  *         does not take a metadata field but rather the document content.
  *         Once re-mapped, the metadata source field is deleted,
  *         unless "keep" is set to <code>true</code>.)
- *      &lt;/contentSourceField&gt;
- *      &lt;contentTargetField&gt;
+ *      &lt;/sourceContentField&gt;
+ *      &lt;targetContentField&gt;
  *         (Solr target field name for a document content/body.
  *          Default is: content)
- *      &lt;/contentTargetField&gt;
+ *      &lt;/targetContentField&gt;
  *      &lt;commitBatchSize&gt;
  *          (max number of docs to send Solr at once)
  *      &lt;/commitBatchSize&gt;
@@ -127,7 +127,7 @@ public class SolrCommitter extends AbstractMappedCommitter {
         } else {
             this.solrServerFactory = solrServerFactory;
         }
-        setContentTargetField(DEFAULT_SOLR_CONTENT_FIELD);
+        setTargetContentField(DEFAULT_SOLR_CONTENT_FIELD);
         setTargetReferenceField(DEFAULT_SOLR_ID_FIELD);
     }
 
