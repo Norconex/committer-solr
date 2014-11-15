@@ -39,11 +39,11 @@ import org.apache.solr.client.solrj.impl.HttpSolrServer;
 import org.apache.solr.client.solrj.request.UpdateRequest;
 import org.apache.solr.common.SolrInputDocument;
 
-import com.norconex.committer.AbstractMappedCommitter;
-import com.norconex.committer.CommitterException;
-import com.norconex.committer.IAddOperation;
-import com.norconex.committer.ICommitOperation;
-import com.norconex.committer.IDeleteOperation;
+import com.norconex.committer.core.AbstractMappedCommitter;
+import com.norconex.committer.core.CommitterException;
+import com.norconex.committer.core.IAddOperation;
+import com.norconex.committer.core.ICommitOperation;
+import com.norconex.committer.core.IDeleteOperation;
 import com.norconex.commons.lang.map.Properties;
 
 /**
