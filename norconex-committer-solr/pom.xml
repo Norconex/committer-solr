@@ -304,7 +304,7 @@
   <distributionManagement>
     <site>
       <id>norconex-site-deployment</id>
-      <url>${site.baseurl}/committer-solr/latest</url>
+      <url>${site.baseurl}/collectors/committer-solr/latest</url>
     </site>
     <snapshotRepository>
       <id>ossrh</id>
