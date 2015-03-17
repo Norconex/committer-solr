@@ -1,4 +1,4 @@
-/* Copyright 2010-2014 Norconex Inc.
+/* Copyright 2010-2015 Norconex Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,11 +31,9 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.apache.solr.client.solrj.SolrServer;
-import org.apache.solr.client.solrj.impl.BinaryRequestWriter;
 import org.apache.solr.client.solrj.impl.HttpSolrServer;
 import org.apache.solr.client.solrj.request.UpdateRequest;
 import org.apache.solr.common.SolrInputDocument;
-import org.apache.solr.common.params.ModifiableSolrParams;
 
 import com.norconex.committer.core.AbstractMappedCommitter;
 import com.norconex.committer.core.CommitterException;
@@ -177,20 +175,23 @@ public class SolrCommitter extends AbstractMappedCommitter {
             SolrServer server = solrServerFactory.createSolrServer(this);
             
             UpdateRequest request = new UpdateRequest();
-            request.setParams(new ModifiableSolrParams());
             // Add to request any parameters provided
             for (String name : updateUrlParams.keySet()) {
-            	LOG.debug("name = " + "updateUrlParams = " + updateUrlParams.get(name));
-               request.setParam(name, updateUrlParams.get(name));               
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("name = " + "updateUrlParams = " 
+                            + updateUrlParams.get(name));
+                }
+                request.setParam(name, updateUrlParams.get(name));               
             }
 
             // Add to request all operations in batch
             for (ICommitOperation op : batch) {
-            	
                 if (op instanceof IAddOperation) {
-                	server.add(buildSolrDocument(((IAddOperation) op).getMetadata()));
+                    server.add(buildSolrDocument(
+                            ((IAddOperation) op).getMetadata()));
                 } else if (op instanceof IDeleteOperation) {
-                	server.deleteById(((IDeleteOperation) op).getReference());
+                    server.deleteById(
+                            ((IDeleteOperation) op).getReference());
                 } else {
                     throw new CommitterException("Unsupported operation:" + op);
                 }

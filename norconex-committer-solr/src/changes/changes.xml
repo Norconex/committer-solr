@@ -8,6 +8,10 @@
   <body>
   
     <release version="2.0.1-SNAPSHOT" date="????-??-??" description="Maintenance release">
+      <action dev="martinfou" type="fix">
+        Fixed issue where mixing additions and deletions in the same
+        committer request generated an exception (github #1).
+      </action>
       <action dev="essiembre" type="update">
         Added Sonatype repository to pom.xml for snapshot releases.
       </action>
