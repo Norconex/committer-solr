@@ -189,11 +189,11 @@ public class SolrCommitterTest extends AbstractSolrTestCase {
         doc2Metadata.addString("id", "3");
         
         committer.add(id, is, metadata);
-        Thread.sleep(1000);
+        Thread.sleep(1500);
         committer.add(id2 , doc2Content , doc2Metadata);
-        Thread.sleep(1000);
+        Thread.sleep(1500);
         committer.remove(id, metadata);
-        Thread.sleep(1000);
+        Thread.sleep(1500);
         committer.add(id3, doc3Content, doc3Metadata);
         
         committer.commit();
@@ -231,13 +231,13 @@ public class SolrCommitterTest extends AbstractSolrTestCase {
         doc2Metadata.addString("id", "3");
         
         committer.add(id, is, metadata);
-        Thread.sleep(1000);
+        Thread.sleep(1500);
         committer.add(id2 , doc2Content , doc2Metadata);
-        Thread.sleep(1000);
+        Thread.sleep(1500);
         committer.remove(id, metadata);
-        Thread.sleep(1000);
+        Thread.sleep(1500);
         committer.remove(id2, metadata);
-        Thread.sleep(1000);
+        Thread.sleep(1500);
         committer.add(id3, doc3Content, doc3Metadata);
         committer.commit();
         
