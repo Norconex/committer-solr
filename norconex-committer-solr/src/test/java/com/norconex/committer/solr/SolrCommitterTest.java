@@ -121,7 +121,7 @@ public class SolrCommitterTest extends AbstractSolrTestCase {
                 SolrCommitter.DEFAULT_SOLR_CONTENT_FIELD).toString().trim());
     }
     
-    public void testSolrJWithThreeAddCommandAndOneDeleteCommand() throws Exception{
+    public void testSolrJWith3AddCommandAnd1DeleteCommand() throws Exception{
         SolrInputDocument doc1 = new SolrInputDocument();
         SolrInputDocument doc2 = new SolrInputDocument();
         SolrInputDocument doc3 = new SolrInputDocument();
