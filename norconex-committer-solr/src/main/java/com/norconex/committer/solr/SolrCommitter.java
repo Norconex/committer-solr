@@ -31,9 +31,11 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.apache.solr.client.solrj.SolrServer;
+import org.apache.solr.client.solrj.impl.BinaryRequestWriter;
 import org.apache.solr.client.solrj.impl.HttpSolrServer;
 import org.apache.solr.client.solrj.request.UpdateRequest;
 import org.apache.solr.common.SolrInputDocument;
+import org.apache.solr.common.params.ModifiableSolrParams;
 
 import com.norconex.committer.core.AbstractMappedCommitter;
 import com.norconex.committer.core.CommitterException;
@@ -173,26 +175,26 @@ public class SolrCommitter extends AbstractMappedCommitter {
                 + " documents to Solr for update/deletion.");
         try {
             SolrServer server = solrServerFactory.createSolrServer(this);
+            
             UpdateRequest request = new UpdateRequest();
-
+            request.setParams(new ModifiableSolrParams());
             // Add to request any parameters provided
             for (String name : updateUrlParams.keySet()) {
-                request.setParam(name, updateUrlParams.get(name));
+            	LOG.debug("name = " + "updateUrlParams = " + updateUrlParams.get(name));
+               request.setParam(name, updateUrlParams.get(name));               
             }
 
             // Add to request all operations in batch
             for (ICommitOperation op : batch) {
+            	
                 if (op instanceof IAddOperation) {
-                    request.add(buildSolrDocument(
-                            ((IAddOperation) op).getMetadata()));
+                	server.add(buildSolrDocument(((IAddOperation) op).getMetadata()));
                 } else if (op instanceof IDeleteOperation) {
-                    request.deleteById(((IDeleteOperation) op).getReference());
+                	server.deleteById(((IDeleteOperation) op).getReference());
                 } else {
                     throw new CommitterException("Unsupported operation:" + op);
                 }
             }
-            
-            request.process(server);
             server.commit();
         } catch (Exception e) {
           throw new CommitterException(
@@ -201,7 +203,6 @@ public class SolrCommitter extends AbstractMappedCommitter {
         LOG.info("Done sending documents to Solr for update/deletion.");    
     }
     
-
     private SolrInputDocument buildSolrDocument(Properties fields) {
         SolrInputDocument doc = new SolrInputDocument();
         for (String key : fields.keySet()) {
@@ -281,11 +282,11 @@ public class SolrCommitter extends AbstractMappedCommitter {
 
     //TODO make it a top-level interface?  Make it XMLConfigurable?
     /**
-     * Factory for creating and initalizing SolrServer instances.
+     * Factory for creating and initializing SolrServer instances.
      */
     public interface ISolrServerFactory extends Serializable {
         /**
-         * Creats a new SolrServer.
+         * Creates a new SolrServer.
          * @param solrCommitter this instance
          * @return a new SolrServer instance
          */
@@ -301,7 +302,7 @@ public class SolrCommitter extends AbstractMappedCommitter {
                 if (StringUtils.isBlank(solrCommitter.getSolrURL())) {
                     throw new CommitterException("Solr URL is undefined.");
                 }
-                server = new HttpSolrServer(solrCommitter.getSolrURL());
+               server = new HttpSolrServer(solrCommitter.getSolrURL());
             }
             return server;
         }

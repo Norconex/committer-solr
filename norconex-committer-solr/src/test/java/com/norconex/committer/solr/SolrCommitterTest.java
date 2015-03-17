@@ -23,6 +23,7 @@ import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.embedded.EmbeddedSolrServer;
 import org.apache.solr.client.solrj.response.QueryResponse;
+import org.apache.solr.client.solrj.response.UpdateResponse;
 import org.apache.solr.common.SolrDocumentList;
 import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.common.params.ModifiableSolrParams;
@@ -65,11 +66,10 @@ public class SolrCommitterTest extends AbstractSolrTestCase {
     private File queue;
 
     @Before
-    public void setup() throws Exception {
-
+    public void setup() throws Exception  {
         File solrHome = tempFolder.newFolder("solr");
-        initCore("src/test/resources/solrconfig.xml",
-                "src/test/resources/schema.xml", solrHome.toString());
+			initCore("src/test/resources/solrconfig.xml",
+			        "src/test/resources/schema.xml", solrHome.toString());
 
         server = new EmbeddedSolrServer(h.getCoreContainer(), h.getCore()
                 .getName());
@@ -81,16 +81,17 @@ public class SolrCommitterTest extends AbstractSolrTestCase {
                 return server;
             }
         });
-
+	
         queue = tempFolder.newFolder("queue");
         committer.setQueueDir(queue.toString());
     }
+    
 
     @After
     public void teardown() {
         deleteCore();
     }
-
+    
     @Test
     public void testCommitAdd() throws Exception {
 
@@ -119,6 +120,135 @@ public class SolrCommitterTest extends AbstractSolrTestCase {
         assertEquals(content, results.get(0).get(
                 SolrCommitter.DEFAULT_SOLR_CONTENT_FIELD).toString().trim());
     }
+    
+    public void testSolrJWithThreeAddCommandAndOneDeleteCommand() throws Exception{
+		SolrInputDocument doc1 = new SolrInputDocument();
+		SolrInputDocument doc2 = new SolrInputDocument();
+		SolrInputDocument doc3 = new SolrInputDocument();
+		doc1.addField("id", "1");
+		doc2.addField("id","2");
+		doc3.addField("id", "3");
+		server.add(doc1);
+		server.add(doc2);
+		server.deleteById("1");
+		server.add(doc3);
+		server.commit();
+		SolrDocumentList results = getAllDocs();
+		assertEquals(2, results.getNumFound());
+    	
+    }
+    
+    @Test
+    public void testAddWithQueueContaining2documents() throws Exception{
+    	String content = "Document 1";
+        InputStream is = IOUtils.toInputStream(content);
+        
+        String content2 = "Document 2";
+        InputStream is2 = IOUtils.toInputStream(content2);
+        
+        String id = "1";
+        String id2 = "2";
+        
+        Properties metadata = new Properties();
+        metadata.addString("id", id);
+        
+        Properties metadata2 = new Properties();
+        metadata.addString("id", id2);
+        
+        committer.add(id, is, metadata);
+        committer.add(id2, is2, metadata2);
+        committer.commit();
+        IOUtils.closeQuietly(is);
+        
+        //Check that there is 2 documents in Solr
+        SolrDocumentList results = getAllDocs();
+        assertEquals(2, results.getNumFound());
+    }
+    
+    @Test
+    public void testCommitQueueWith3AddCommandAnd1DeleteCommand() throws Exception{
+    	UpdateResponse worked = server.deleteByQuery("*:*");
+    	committer.commit();
+    	System.out.println("deleted " + worked.toString());
+    	String content = "Document 1";
+        InputStream is = IOUtils.toInputStream(content);
+        String id = "1";
+        Properties metadata = new Properties();
+        metadata.addString("id", id);
+        
+        String content2 = "Document 2";
+        String id2 = "2";
+    	InputStream doc2Content = IOUtils.toInputStream(content2);
+    	Properties doc2Metadata = new Properties();
+    	doc2Metadata.addString("id", "2");
+    	
+        String content3 = "Document 3";
+        String id3 = "3";
+    	InputStream doc3Content = IOUtils.toInputStream(content3);
+    	Properties doc3Metadata = new Properties();
+    	doc2Metadata.addString("id", "3");
+        
+        committer.add(id, is, metadata);
+        Thread.sleep(1000);
+    	committer.add(id2 , doc2Content , doc2Metadata);
+    	Thread.sleep(1000);
+        committer.remove(id, metadata);
+        Thread.sleep(1000);
+        committer.add(id3, doc3Content, doc3Metadata);
+        
+        committer.commit();
+        
+        IOUtils.closeQuietly(is);
+        
+        //Check that there is 2 documents in Solr
+        SolrDocumentList results = getAllDocs();
+        System.out.println("results " + results.toString());
+        assertEquals(2, results.getNumFound());
+        System.out.println("Writing/Reading this => " + committer);
+    }
+    
+    @Test
+    public void testCommitQueueWith3AddCommandAnd2DeleteCommand() throws Exception{
+    	UpdateResponse worked = server.deleteByQuery("*:*");
+    	committer.commit();
+    	System.out.println("deleted " + worked.toString());
+    	String content = "Document 1";
+        InputStream is = IOUtils.toInputStream(content);
+        String id = "1";
+        Properties metadata = new Properties();
+        metadata.addString("id", id);
+        
+        String content2 = "Document 2";
+        String id2 = "2";
+    	InputStream doc2Content = IOUtils.toInputStream(content2);
+    	Properties doc2Metadata = new Properties();
+    	doc2Metadata.addString("id", "2");
+    	
+        String content3 = "Document 3";
+        String id3 = "3";
+    	InputStream doc3Content = IOUtils.toInputStream(content3);
+    	Properties doc3Metadata = new Properties();
+    	doc2Metadata.addString("id", "3");
+        
+        committer.add(id, is, metadata);
+        Thread.sleep(1000);
+    	committer.add(id2 , doc2Content , doc2Metadata);
+    	Thread.sleep(1000);
+        committer.remove(id, metadata);
+        Thread.sleep(1000);
+        committer.remove(id2, metadata);
+        Thread.sleep(1000);
+        committer.add(id3, doc3Content, doc3Metadata);
+        committer.commit();
+        
+        IOUtils.closeQuietly(is);
+        
+        //Check that there is 2 documents in Solr
+        SolrDocumentList results = getAllDocs();
+        System.out.println("results " + results.toString());
+        assertEquals(1, results.getNumFound());
+        System.out.println("Writing/Reading this => " + committer);
+    }
 
     @Test
     public void testCommitDelete() throws Exception {
@@ -129,6 +259,7 @@ public class SolrCommitterTest extends AbstractSolrTestCase {
         doc.addField(SolrCommitter.DEFAULT_SOLR_ID_FIELD, id);
         String content = "hello world!";
         doc.addField(SolrCommitter.DEFAULT_SOLR_CONTENT_FIELD, content);
+ 
         server.add(doc);
         server.commit();
 
@@ -153,6 +284,15 @@ public class SolrCommitterTest extends AbstractSolrTestCase {
         return results;
     }
     
+    private SolrDocumentList getAllDocs() throws SolrServerException{
+    	ModifiableSolrParams solrParams = new ModifiableSolrParams();
+      	solrParams.set("q", "*:*");
+        QueryResponse response = server.query(solrParams);
+        SolrDocumentList results = response.getResults();
+        return results;
+    }
+    
+
     @Test
     public void testWriteRead() throws IOException {
         SolrCommitter outCommitter = new SolrCommitter();
