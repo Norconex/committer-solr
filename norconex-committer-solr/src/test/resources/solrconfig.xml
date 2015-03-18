@@ -33,6 +33,15 @@
     <updateLog>
       <str name="dir">${solr.core0.data.dir:}</str>
     </updateLog>
+    <autoSoftCommit>
+        <maxDocs>1</maxDocs>
+        <maxTime>1</maxTime>
+    </autoSoftCommit>    
+    <autoCommit>
+      <maxTime>1</maxTime>
+      <maxDocs>1</maxDocs>
+      <openSearcher>false</openSearcher>
+    </autoCommit>
   </updateHandler>
 
   <!-- realtime get handler, guaranteed to return the latest stored fields 
@@ -68,10 +77,6 @@
   <admin>
     <defaultQuery>solr</defaultQuery>
   </admin>
-
-   <autoCommit>
-     <maxTime>1</maxTime>
-   </autoCommit>
 
 </config>
 
