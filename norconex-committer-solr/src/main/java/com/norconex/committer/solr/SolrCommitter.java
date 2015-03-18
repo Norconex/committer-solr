@@ -184,14 +184,25 @@ public class SolrCommitter extends AbstractMappedCommitter {
                 request.setParam(name, updateUrlParams.get(name));               
             }
 
-            // Add to request all operations in batch
+            // Add to request all operations in batch, and force a commit
+            // whenever we do a "delete" after an "add" to eliminate the
+            // risk of the delete being a no-op since added documents are 
+            // not visible until committed (thus nothing to delete).
+            
+            //TODO before a delete, check if the same reference was previously
+            //added before forcing a commit if any additions occurred.
+            boolean previousWasAddition = false;
             for (ICommitOperation op : batch) {
                 if (op instanceof IAddOperation) {
                     server.add(buildSolrDocument(
                             ((IAddOperation) op).getMetadata()));
+                    previousWasAddition = true;
                 } else if (op instanceof IDeleteOperation) {
-                    server.deleteById(
-                            ((IDeleteOperation) op).getReference());
+                    if (previousWasAddition) {
+                        server.commit();
+                    }
+                    server.deleteById(((IDeleteOperation) op).getReference());
+                    previousWasAddition = false;
                 } else {
                     throw new CommitterException("Unsupported operation:" + op);
                 }
