@@ -81,7 +81,8 @@ public class SolrCommitterTest extends AbstractSolrTestCase {
                 return server;
             }
         });
-    
+        committer.setUpdateUrlParam("commitWithin", "1");
+
         queue = tempFolder.newFolder("queue");
         committer.setQueueDir(queue.toString());
     }
@@ -170,6 +171,7 @@ public class SolrCommitterTest extends AbstractSolrTestCase {
             throws Exception{
         UpdateResponse worked = server.deleteByQuery("*:*");
         committer.commit();
+        
         System.out.println("deleted " + worked.toString());
         String content1 = "Document 1";
         InputStream doc1Content = IOUtils.toInputStream(content1);
@@ -200,9 +202,6 @@ public class SolrCommitterTest extends AbstractSolrTestCase {
         IOUtils.closeQuietly(doc2Content);
         IOUtils.closeQuietly(doc3Content);
         
-        // We force it to show results.
-        server.optimize(true, true);
-        
         //Check that there is 2 documents in Solr
         SolrDocumentList results = getAllDocs();
         System.out.println("results " + results.toString());
@@ -213,6 +212,7 @@ public class SolrCommitterTest extends AbstractSolrTestCase {
     @Test
     public void testCommitQueueWith3AddCommandAnd2DeleteCommand() 
             throws Exception{
+
         UpdateResponse worked = server.deleteByQuery("*:*");
         committer.commit();
         System.out.println("deleted " + worked.toString());
@@ -244,9 +244,6 @@ public class SolrCommitterTest extends AbstractSolrTestCase {
         IOUtils.closeQuietly(doc1Content);
         IOUtils.closeQuietly(doc2Content);
         IOUtils.closeQuietly(doc3Content);
-        
-        // We force it to show results.
-        server.optimize(true, true);
         
         //Check that there is 2 documents in Solr
         SolrDocumentList results = getAllDocs();
