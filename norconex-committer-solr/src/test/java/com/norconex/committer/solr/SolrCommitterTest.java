@@ -193,6 +193,9 @@ public class SolrCommitterTest extends AbstractSolrTestCase {
         
         committer.add(id1, doc1Content, doc1Metadata);
         committer.add(id2 , doc2Content , doc2Metadata);
+
+        committer.commit();
+        
         committer.remove(id1, doc1Metadata);
         committer.add(id3, doc3Content, doc3Metadata);
         
@@ -236,6 +239,9 @@ public class SolrCommitterTest extends AbstractSolrTestCase {
         
         committer.add(id1, doc1Content, doc1Metadata);
         committer.add(id2 , doc2Content , doc2Metadata);
+
+        committer.commit();
+
         committer.remove(id1, doc1Metadata);
         committer.remove(id2, doc1Metadata);
         committer.add(id3, doc3Content, doc3Metadata);
