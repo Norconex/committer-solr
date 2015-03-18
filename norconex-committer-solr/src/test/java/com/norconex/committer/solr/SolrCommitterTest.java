@@ -35,7 +35,6 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import com.norconex.committer.solr.SolrCommitter.ISolrServerFactory;
-import com.norconex.commons.lang.Sleeper;
 import com.norconex.commons.lang.config.ConfigurationUtil;
 import com.norconex.commons.lang.map.Properties;
 
@@ -201,8 +200,8 @@ public class SolrCommitterTest extends AbstractSolrTestCase {
         IOUtils.closeQuietly(doc2Content);
         IOUtils.closeQuietly(doc3Content);
         
-        // Wait for Solr to finish committing.
-        Sleeper.sleepSeconds(3);
+        // We force it to show results.
+        server.optimize(true, true);
         
         //Check that there is 2 documents in Solr
         SolrDocumentList results = getAllDocs();
@@ -246,9 +245,8 @@ public class SolrCommitterTest extends AbstractSolrTestCase {
         IOUtils.closeQuietly(doc2Content);
         IOUtils.closeQuietly(doc3Content);
         
-        // Wait for Solr to finish committing.
-        Sleeper.sleepSeconds(3);
-
+        // We force it to show results.
+        server.optimize(true, true);
         
         //Check that there is 2 documents in Solr
         SolrDocumentList results = getAllDocs();
