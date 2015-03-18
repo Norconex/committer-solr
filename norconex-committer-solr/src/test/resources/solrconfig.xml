@@ -69,5 +69,9 @@
     <defaultQuery>solr</defaultQuery>
   </admin>
 
+   <autoCommit>
+     <maxTime>1</maxTime>
+   </autoCommit>
+
 </config>
 
