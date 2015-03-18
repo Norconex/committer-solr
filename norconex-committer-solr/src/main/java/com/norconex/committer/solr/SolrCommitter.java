@@ -67,7 +67,7 @@ import com.norconex.commons.lang.map.Properties;
  *         (Name of Solr target field where the store a document unique 
  *         identifier (idSourceField).  If not specified, default is "id".) 
  *      &lt;/targetReferenceField&gt;
- *      &lt;sourceContentField keep="[false|true]&gt";
+ *      &lt;sourceContentField keep="[false|true]"&gt;
  *         (If you wish to use a metadata field to act as the document 
  *         "content", you can specify that field here.  Default 
  *         does not take a metadata field but rather the document content.
