@@ -199,7 +199,7 @@ public class SolrCommitter extends AbstractMappedCommitter {
                     previousWasAddition = true;
                 } else if (op instanceof IDeleteOperation) {
                     if (previousWasAddition) {
-                        server.commit();
+                        server.commit(true, true);
                     }
                     server.deleteById(((IDeleteOperation) op).getReference());
                     previousWasAddition = false;
@@ -207,7 +207,7 @@ public class SolrCommitter extends AbstractMappedCommitter {
                     throw new CommitterException("Unsupported operation:" + op);
                 }
             }
-            server.commit();
+            server.commit(true, true);
         } catch (Exception e) {
           throw new CommitterException(
                   "Cannot index document batch to Solr.", e);
