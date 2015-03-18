@@ -35,6 +35,7 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import com.norconex.committer.solr.SolrCommitter.ISolrServerFactory;
+import com.norconex.commons.lang.Sleeper;
 import com.norconex.commons.lang.config.ConfigurationUtil;
 import com.norconex.commons.lang.map.Properties;
 
@@ -166,15 +167,16 @@ public class SolrCommitterTest extends AbstractSolrTestCase {
     }
     
     @Test
-    public void testCommitQueueWith3AddCommandAnd1DeleteCommand() throws Exception{
+    public void testCommitQueueWith3AddCommandAnd1DeleteCommand() 
+            throws Exception{
         UpdateResponse worked = server.deleteByQuery("*:*");
         committer.commit();
         System.out.println("deleted " + worked.toString());
-        String content = "Document 1";
-        InputStream is = IOUtils.toInputStream(content);
-        String id = "1";
-        Properties metadata = new Properties();
-        metadata.addString("id", id);
+        String content1 = "Document 1";
+        InputStream doc1Content = IOUtils.toInputStream(content1);
+        String id1 = "1";
+        Properties doc1Metadata = new Properties();
+        doc1Metadata.addString("id", id1);
         
         String content2 = "Document 2";
         String id2 = "2";
@@ -188,17 +190,19 @@ public class SolrCommitterTest extends AbstractSolrTestCase {
         Properties doc3Metadata = new Properties();
         doc2Metadata.addString("id", "3");
         
-        committer.add(id, is, metadata);
-        Thread.sleep(1500);
+        committer.add(id1, doc1Content, doc1Metadata);
         committer.add(id2 , doc2Content , doc2Metadata);
-        Thread.sleep(1500);
-        committer.remove(id, metadata);
-        Thread.sleep(1500);
+        committer.remove(id1, doc1Metadata);
         committer.add(id3, doc3Content, doc3Metadata);
         
         committer.commit();
         
-        IOUtils.closeQuietly(is);
+        IOUtils.closeQuietly(doc1Content);
+        IOUtils.closeQuietly(doc2Content);
+        IOUtils.closeQuietly(doc3Content);
+        
+        // Wait for Solr to finish committing.
+        Sleeper.sleepSeconds(3);
         
         //Check that there is 2 documents in Solr
         SolrDocumentList results = getAllDocs();
@@ -208,15 +212,16 @@ public class SolrCommitterTest extends AbstractSolrTestCase {
     }
     
     @Test
-    public void testCommitQueueWith3AddCommandAnd2DeleteCommand() throws Exception{
+    public void testCommitQueueWith3AddCommandAnd2DeleteCommand() 
+            throws Exception{
         UpdateResponse worked = server.deleteByQuery("*:*");
         committer.commit();
         System.out.println("deleted " + worked.toString());
         String content = "Document 1";
-        InputStream is = IOUtils.toInputStream(content);
-        String id = "1";
-        Properties metadata = new Properties();
-        metadata.addString("id", id);
+        InputStream doc1Content = IOUtils.toInputStream(content);
+        String id1 = "1";
+        Properties doc1Metadata = new Properties();
+        doc1Metadata.addString("id", id1);
         
         String content2 = "Document 2";
         String id2 = "2";
@@ -230,18 +235,20 @@ public class SolrCommitterTest extends AbstractSolrTestCase {
         Properties doc3Metadata = new Properties();
         doc2Metadata.addString("id", "3");
         
-        committer.add(id, is, metadata);
-        Thread.sleep(1500);
+        committer.add(id1, doc1Content, doc1Metadata);
         committer.add(id2 , doc2Content , doc2Metadata);
-        Thread.sleep(1500);
-        committer.remove(id, metadata);
-        Thread.sleep(1500);
-        committer.remove(id2, metadata);
-        Thread.sleep(1500);
+        committer.remove(id1, doc1Metadata);
+        committer.remove(id2, doc1Metadata);
         committer.add(id3, doc3Content, doc3Metadata);
         committer.commit();
         
-        IOUtils.closeQuietly(is);
+        IOUtils.closeQuietly(doc1Content);
+        IOUtils.closeQuietly(doc2Content);
+        IOUtils.closeQuietly(doc3Content);
+        
+        // Wait for Solr to finish committing.
+        Sleeper.sleepSeconds(3);
+
         
         //Check that there is 2 documents in Solr
         SolrDocumentList results = getAllDocs();
