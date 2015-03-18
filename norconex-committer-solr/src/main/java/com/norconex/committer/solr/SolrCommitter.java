@@ -191,6 +191,7 @@ public class SolrCommitter extends AbstractMappedCommitter {
             
             //TODO before a delete, check if the same reference was previously
             //added before forcing a commit if any additions occurred.
+            //TODO figure out why the committing fix does not always work
             boolean previousWasAddition = false;
             for (ICommitOperation op : batch) {
                 if (op instanceof IAddOperation) {
@@ -199,7 +200,7 @@ public class SolrCommitter extends AbstractMappedCommitter {
                     previousWasAddition = true;
                 } else if (op instanceof IDeleteOperation) {
                     if (previousWasAddition) {
-                        server.commit(false, true, true);
+                        server.commit();
                     }
                     server.deleteById(((IDeleteOperation) op).getReference());
                     previousWasAddition = false;
@@ -207,7 +208,7 @@ public class SolrCommitter extends AbstractMappedCommitter {
                     throw new CommitterException("Unsupported operation:" + op);
                 }
             }
-            server.commit(false, true, true);
+            server.commit();
         } catch (Exception e) {
           throw new CommitterException(
                   "Cannot index document batch to Solr.", e);
