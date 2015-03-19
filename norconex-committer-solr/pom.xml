@@ -27,7 +27,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>    
     <site.baseurl/>
-    <solr.version>4.7.0</solr.version>
+    <solr.version>5.0.0</solr.version>
   </properties>
   <inceptionYear>2009</inceptionYear>
 
@@ -216,8 +216,8 @@
           <detectLinks>true</detectLinks>
           <source>1.7</source>
           <links>
-            <link>http://lucene.apache.org/solr/4_7_0/solr-core/</link>
-            <link>http://lucene.apache.org/solr/4_7_0/solr-test-framework/</link>
+            <link>http://lucene.apache.org/solr/5_0_0/solr-core/</link>
+            <link>http://lucene.apache.org/solr/5_0_0/solr-test-framework/</link>
           </links>
         </configuration>
         <executions>
@@ -376,8 +376,8 @@
           <show>protected</show>
           <detectLinks>true</detectLinks>
           <links>
-            <link>http://lucene.apache.org/solr/4_7_0/solr-core/</link>
-            <link>http://lucene.apache.org/solr/4_7_0/solr-test-framework/</link>
+            <link>http://lucene.apache.org/solr/5_0_0/solr-core/</link>
+            <link>http://lucene.apache.org/solr/5_0_0/solr-test-framework/</link>
           </links>          
         </configuration>
         <reportSets>
