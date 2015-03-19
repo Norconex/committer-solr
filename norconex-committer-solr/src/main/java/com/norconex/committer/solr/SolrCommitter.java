@@ -30,6 +30,7 @@ import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
+import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.impl.HttpSolrServer;
 import org.apache.solr.client.solrj.request.UpdateRequest;
@@ -172,7 +173,7 @@ public class SolrCommitter extends AbstractMappedCommitter {
         LOG.info("Sending " + batch.size() 
                 + " documents to Solr for update/deletion.");
         try {
-            SolrServer server = solrServerFactory.createSolrServer(this);
+            SolrClient server = solrServerFactory.createSolrServer(this);
             
             UpdateRequest request = new UpdateRequest();
             // Add to request any parameters provided
@@ -303,14 +304,14 @@ public class SolrCommitter extends AbstractMappedCommitter {
          * @param solrCommitter this instance
          * @return a new SolrServer instance
          */
-        SolrServer createSolrServer(SolrCommitter solrCommitter);
+        SolrClient createSolrServer(SolrCommitter solrCommitter);
     }
     
     static class DefaultSolrServerFactory implements ISolrServerFactory {
         private static final long serialVersionUID = 5820720860417411567L;
-        private SolrServer server;
+        private SolrClient server;
         @Override
-        public SolrServer createSolrServer(SolrCommitter solrCommitter) {
+        public SolrClient createSolrServer(SolrCommitter solrCommitter) {
             if (server == null) {
                 if (StringUtils.isBlank(solrCommitter.getSolrURL())) {
                     throw new CommitterException("Solr URL is undefined.");

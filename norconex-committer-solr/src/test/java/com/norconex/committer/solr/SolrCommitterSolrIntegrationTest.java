@@ -20,9 +20,8 @@ import java.io.InputStream;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.solr.client.solrj.SolrClient;
-import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
-import org.apache.solr.client.solrj.embedded.EmbeddedSolrServer;
+import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.client.solrj.response.UpdateResponse;
 import org.apache.solr.common.SolrDocumentList;
@@ -31,6 +30,7 @@ import org.apache.solr.common.params.ModifiableSolrParams;
 import org.apache.solr.util.AbstractSolrTestCase;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -45,13 +45,14 @@ import com.norconex.commons.lang.map.Properties;
  * 
  * @author Pascal Dimassimo
  */
-public class SolrCommitterTest extends AbstractSolrTestCase {
+@Ignore("This series of test is skipped because it needs an external Solr Server Running")
+public class SolrCommitterSolrIntegrationTest extends AbstractSolrTestCase {
 
     //TODO test update/delete URL params
     
     static {
         System.setProperty("solr.allow.unsafe.resourceloading", "true");
-        ClassLoader loader = SolrCommitterTest.class.getClassLoader();
+        ClassLoader loader = SolrCommitterSolrIntegrationTest.class.getClassLoader();
         loader.setPackageAssertionStatus("org.apache.solr", true);
         loader.setPackageAssertionStatus("org.apache.lucene", true);
     }
@@ -60,7 +61,7 @@ public class SolrCommitterTest extends AbstractSolrTestCase {
     @Rule
     public TemporaryFolder tempFolder = new TemporaryFolder();
 
-    private EmbeddedSolrServer server;
+    private SolrClient server = new HttpSolrClient("http://localhost:8983/solr/collection1/");
 
     private SolrCommitter committer;
 
@@ -72,8 +73,7 @@ public class SolrCommitterTest extends AbstractSolrTestCase {
             initCore("src/test/resources/solrconfig.xml",
                     "src/test/resources/schema.xml", solrHome.toString());
 
-        server = new EmbeddedSolrServer(h.getCoreContainer(), h.getCore()
-                .getName());
+
         
         committer = new SolrCommitter(new ISolrServerFactory() {
             private static final long serialVersionUID = 4648990433469043210L;
@@ -86,12 +86,16 @@ public class SolrCommitterTest extends AbstractSolrTestCase {
 
         queue = tempFolder.newFolder("queue");
         committer.setQueueDir(queue.toString());
+        server.deleteByQuery("*:*");
+        server.commit();
     }
     
 
     @After
-    public void teardown() {
+    public void teardown() throws SolrServerException, IOException {
         deleteCore();
+        server.deleteByQuery("*:*");
+        server.commit();
     }
     
     @Test
