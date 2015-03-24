@@ -31,8 +31,7 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.apache.solr.client.solrj.SolrClient;
-import org.apache.solr.client.solrj.SolrServer;
-import org.apache.solr.client.solrj.impl.HttpSolrServer;
+import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.apache.solr.client.solrj.request.UpdateRequest;
 import org.apache.solr.common.SolrInputDocument;
 
@@ -316,7 +315,7 @@ public class SolrCommitter extends AbstractMappedCommitter {
                 if (StringUtils.isBlank(solrCommitter.getSolrURL())) {
                     throw new CommitterException("Solr URL is undefined.");
                 }
-               server = new HttpSolrServer(solrCommitter.getSolrURL());
+               server = new HttpSolrClient(solrCommitter.getSolrURL());
             }
             return server;
         }

@@ -8,6 +8,10 @@
   <body>
   
     <release version="2.0.1-SNAPSHOT" date="????-??-??" description="Maintenance release">
+      <action dev="martinfou" type="update">
+        Upgraded Solr dependencies to Solr 5. Tested to work with versions
+        from Solr 3.x to 5.x (cloud and standalone).
+      </action>      
       <action dev="martinfou" type="fix">
         Fixed issue where mixing additions and deletions in the same
         committer request generated an exception (github #1).
