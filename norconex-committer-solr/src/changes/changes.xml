@@ -7,7 +7,7 @@
   </properties>
   <body>
   
-    <release version="2.0.1-SNAPSHOT" date="????-??-??" description="Maintenance release">
+    <release version="2.0.1" date="2015-04-1" description="Maintenance release">
       <action dev="martinfou" type="update">
         Upgraded Solr dependencies to Solr 5. Tested to work with versions
         from Solr 3.x to 5.x (cloud and standalone).
@@ -20,8 +20,12 @@
         Added Sonatype repository to pom.xml for snapshot releases.
       </action>
       <action dev="essiembre" type="update">
-        Upgraded Norconex Committer Core to 2.0.1.
-      </action>      
+        Updated several maven plugins and added SonarQube maven plugin.
+      </action>
+      <action dev="essiembre" type="update">
+        Library updates: Norconex Committer Core 2.0.1, Apache Solr 5.0.0, 
+        SLF4j 1.7.12, JUnit 4.12, Apache Commons Codec 1.10.
+      </action>
     </release>
     
     <release version="2.0.0" date="2014-11-25" description="Major release">
