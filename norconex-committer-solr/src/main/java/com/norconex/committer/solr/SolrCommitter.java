@@ -18,6 +18,7 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import javax.xml.stream.XMLStreamException;
@@ -32,8 +33,8 @@ import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
-import org.apache.solr.client.solrj.request.UpdateRequest;
 import org.apache.solr.common.SolrInputDocument;
+import org.apache.solr.common.params.ModifiableSolrParams;
 
 import com.norconex.committer.core.AbstractMappedCommitter;
 import com.norconex.committer.core.CommitterException;
@@ -174,16 +175,6 @@ public class SolrCommitter extends AbstractMappedCommitter {
         try {
             SolrClient server = solrServerFactory.createSolrServer(this);
             
-            UpdateRequest request = new UpdateRequest();
-            // Add to request any parameters provided
-            for (String name : updateUrlParams.keySet()) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("name = " + "updateUrlParams = " 
-                            + updateUrlParams.get(name));
-                }
-                request.setParam(name, updateUrlParams.get(name));               
-            }
-
             // Add to request all operations in batch, and force a commit
             // whenever we do a "delete" after an "add" to eliminate the
             // risk of the delete being a no-op since added documents are 
@@ -308,14 +299,19 @@ public class SolrCommitter extends AbstractMappedCommitter {
     
     static class DefaultSolrServerFactory implements ISolrServerFactory {
         private static final long serialVersionUID = 5820720860417411567L;
-        private SolrClient server;
+        private HttpSolrClient server;
         @Override
         public SolrClient createSolrServer(SolrCommitter solrCommitter) {
             if (server == null) {
                 if (StringUtils.isBlank(solrCommitter.getSolrURL())) {
                     throw new CommitterException("Solr URL is undefined.");
                 }
-               server = new HttpSolrClient(solrCommitter.getSolrURL());
+                server = new CommitterSolrClient(solrCommitter.getSolrURL());
+                for (Entry<String, String> entry : 
+                        solrCommitter.updateUrlParams.entrySet()) {
+                    server.getInvariantParams().set(
+                            entry.getKey(), entry.getValue());
+                }
             }
             return server;
         }
@@ -354,4 +350,13 @@ public class SolrCommitter extends AbstractMappedCommitter {
         }
     }
 
+    // This class is to fix the HttpSolrClient having a null invariantParams
+    // variable with no way to set it.
+    static class CommitterSolrClient extends HttpSolrClient {
+        private static final long serialVersionUID = 4152566496035344194L;
+        public CommitterSolrClient(String baseURL) {
+            super(baseURL);
+            invariantParams = new ModifiableSolrParams();
+        }
+    }
 }
