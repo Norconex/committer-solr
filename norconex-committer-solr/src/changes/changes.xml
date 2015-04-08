@@ -6,8 +6,18 @@
     <author email="info@norconex.com">Norconex Inc.</author>
   </properties>
   <body>
-  
-    <release version="2.0.1" date="2015-04-1" description="Maintenance release">
+
+    <release version="2.0.2" date="2015-04-08" description="Bug fix release">
+      <action dev="essiembre" type="update">
+        Library updates: Apache Http Components 4.4.1.
+      </action>
+      <action dev="essiembre" type="fix">
+        Fixed adding parameters to "updateUrlParams" having no effect
+        (github #3).
+      </action>
+    </release>
+
+    <release version="2.0.1" date="2015-04-01" description="Maintenance release">
       <action dev="martinfou" type="update">
         Upgraded Solr dependencies to Solr 5. Tested to work with versions
         from Solr 3.x to 5.x (cloud and standalone).
