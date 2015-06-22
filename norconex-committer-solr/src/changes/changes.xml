@@ -7,6 +7,13 @@
   </properties>
   <body>
 
+    <release version="2.0.3" date="2015-06-22" description="Minor release">
+      <action dev="martinfou" type="add">
+        New flag "commitDisabled" for the config file to decide 
+        if the commit is done by the client or the server.
+      </action>
+    </release>
+
     <release version="2.0.2" date="2015-04-08" description="Bug fix release">
       <action dev="essiembre" type="update">
         Library updates: Apache Http Components 4.4.1.

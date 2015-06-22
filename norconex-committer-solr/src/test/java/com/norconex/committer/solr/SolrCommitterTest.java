@@ -312,6 +312,7 @@ public class SolrCommitterTest extends AbstractSolrTestCase {
         outCommitter.setQueueSize(100);
         outCommitter.setCommitBatchSize(50);
         outCommitter.setSolrURL("http://solrurl.com/test");
+        outCommitter.setCommitDisabled(false);
         outCommitter.setUpdateUrlParam("uparam1", "uvalue1");
         outCommitter.setUpdateUrlParam("uparam2", "uvalue2");
 //        outCommitter.setDeleteUrlParam("dparam1", "dvalue1");

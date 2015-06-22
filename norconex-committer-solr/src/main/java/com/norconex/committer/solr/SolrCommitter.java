@@ -102,6 +102,7 @@ public class SolrCommitter extends AbstractMappedCommitter {
     public static final String DEFAULT_SOLR_CONTENT_FIELD = "content";
 
     private String solrURL;
+    private Boolean commitDisabled=false;
 
     private final Map<String, String> updateUrlParams = 
             new HashMap<String, String>();
@@ -166,7 +167,22 @@ public class SolrCommitter extends AbstractMappedCommitter {
     public Set<String> getUpdateUrlParamNames() {
         return updateUrlParams.keySet();
     }
-
+    /**
+     * Set the variable to let the client know if it should commit or
+     * let the server auto-commit.
+     * @param commitDisabled
+     */
+    public void setCommitDisabled(Boolean commitDisabled) {
+        this.commitDisabled = commitDisabled;
+    }
+    /**
+     * Gets the commitDisabled variable to find out if the client should 
+     * commit or let the server auto-commit.
+     * @return Boolean
+     */
+    public Boolean getCommitDisabled() {
+        return commitDisabled;
+    }
     @Override
     protected void commitBatch(List<ICommitOperation> batch) {
 
@@ -191,7 +207,9 @@ public class SolrCommitter extends AbstractMappedCommitter {
                     previousWasAddition = true;
                 } else if (op instanceof IDeleteOperation) {
                     if (previousWasAddition) {
-                        server.commit();
+                        if(!this.getCommitDisabled()){
+                            server.commit();
+                        }
                     }
                     server.deleteById(((IDeleteOperation) op).getReference());
                     previousWasAddition = false;
@@ -199,7 +217,9 @@ public class SolrCommitter extends AbstractMappedCommitter {
                     throw new CommitterException("Unsupported operation:" + op);
                 }
             }
-            server.commit();
+            if(!this.getCommitDisabled()){
+                server.commit();
+            }
         } catch (Exception e) {
           throw new CommitterException(
                   "Cannot index document batch to Solr.", e);
@@ -231,6 +251,11 @@ public class SolrCommitter extends AbstractMappedCommitter {
             writer.writeCharacters(updateUrlParams.get(name));
             writer.writeEndElement();
         }
+
+        writer.writeStartElement("commitEnabled");
+        writer.writeCharacters(commitDisabled.toString());
+        writer.writeEndElement();
+        
         writer.writeEndElement();
     }
 
@@ -238,6 +263,7 @@ public class SolrCommitter extends AbstractMappedCommitter {
     @SuppressWarnings("unchecked")
     protected void loadFromXml(XMLConfiguration xml) {
         setSolrURL(xml.getString("solrURL", null));
+        setCommitDisabled(xml.getBoolean("commitDisabled",false));
 
         List<HierarchicalConfiguration> uparams = 
                 xml.configurationsAt("solrUpdateURLParams.param");
@@ -246,7 +272,6 @@ public class SolrCommitter extends AbstractMappedCommitter {
         }
     }
 
-    
     @Override
     public int hashCode() {
         return new HashCodeBuilder()
