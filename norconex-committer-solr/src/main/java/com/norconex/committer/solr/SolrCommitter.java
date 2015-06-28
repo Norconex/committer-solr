@@ -56,6 +56,7 @@ import com.norconex.commons.lang.map.Properties;
  *         &lt;param name="(parameter name)"&gt;(parameter value)&lt;/param&gt;
  *         &lt;-- multiple param tags allowed --&gt;
  *      &lt;/solrUpdateURLParams&gt;
+ *      &lt;commitDisabled&gt;[false|true]&lt;/commitDisabled&gt;
  *      &lt;sourceReferenceField keep="[false|true]"&gt;
  *         (Optional name of field that contains the document reference, when 
  *         the default document reference is not used.  The reference value
@@ -102,7 +103,7 @@ public class SolrCommitter extends AbstractMappedCommitter {
     public static final String DEFAULT_SOLR_CONTENT_FIELD = "content";
 
     private String solrURL;
-    private Boolean commitDisabled=false;
+    private boolean commitDisabled;
 
     private final Map<String, String> updateUrlParams = 
             new HashMap<String, String>();
@@ -170,17 +171,19 @@ public class SolrCommitter extends AbstractMappedCommitter {
     /**
      * Set the variable to let the client know if it should commit or
      * let the server auto-commit.
-     * @param commitDisabled
+     * @param commitDisabled <code>true</code> if commit is disabled
+     * @since 2.1.0
      */
-    public void setCommitDisabled(Boolean commitDisabled) {
+    public void setCommitDisabled(boolean commitDisabled) {
         this.commitDisabled = commitDisabled;
     }
     /**
      * Gets the commitDisabled variable to find out if the client should 
      * commit or let the server auto-commit.
-     * @return Boolean
+     * @return <code>true</code> if commit is disabled.
+     * @since 2.1.0
      */
-    public Boolean getCommitDisabled() {
+    public boolean isCommitDisabled() {
         return commitDisabled;
     }
     @Override
@@ -207,7 +210,7 @@ public class SolrCommitter extends AbstractMappedCommitter {
                     previousWasAddition = true;
                 } else if (op instanceof IDeleteOperation) {
                     if (previousWasAddition) {
-                        if(!this.getCommitDisabled()){
+                        if (!isCommitDisabled()) {
                             server.commit();
                         }
                     }
@@ -217,7 +220,7 @@ public class SolrCommitter extends AbstractMappedCommitter {
                     throw new CommitterException("Unsupported operation:" + op);
                 }
             }
-            if(!this.getCommitDisabled()){
+            if (!isCommitDisabled()) {
                 server.commit();
             }
         } catch (Exception e) {
@@ -252,8 +255,8 @@ public class SolrCommitter extends AbstractMappedCommitter {
             writer.writeEndElement();
         }
 
-        writer.writeStartElement("commitEnabled");
-        writer.writeCharacters(commitDisabled.toString());
+        writer.writeStartElement("commitDisabled");
+        writer.writeCharacters(Boolean.toString(isCommitDisabled()));
         writer.writeEndElement();
         
         writer.writeEndElement();
@@ -262,8 +265,8 @@ public class SolrCommitter extends AbstractMappedCommitter {
     @Override
     @SuppressWarnings("unchecked")
     protected void loadFromXml(XMLConfiguration xml) {
-        setSolrURL(xml.getString("solrURL", null));
-        setCommitDisabled(xml.getBoolean("commitDisabled",false));
+        setSolrURL(xml.getString("solrURL", getSolrURL()));
+        setCommitDisabled(xml.getBoolean("commitDisabled", isCommitDisabled()));
 
         List<HierarchicalConfiguration> uparams = 
                 xml.configurationsAt("solrUpdateURLParams.param");
@@ -279,6 +282,7 @@ public class SolrCommitter extends AbstractMappedCommitter {
             .append(solrServerFactory)
             .append(solrURL)
             .append(updateUrlParams)
+            .append(commitDisabled)
             .toHashCode();
     }
 
@@ -299,6 +303,7 @@ public class SolrCommitter extends AbstractMappedCommitter {
             .append(solrServerFactory, other.solrServerFactory)
             .append(solrURL, other.solrURL)
             .append(updateUrlParams, other.updateUrlParams)
+            .append(commitDisabled, other.commitDisabled)
             .isEquals();
     }
     
@@ -306,6 +311,7 @@ public class SolrCommitter extends AbstractMappedCommitter {
     public String toString() {
         return "SolrCommitter [solrURL=" + solrURL + ", updateUrlParams="
                 + updateUrlParams + ", solrServerFactory=" + solrServerFactory
+                + ", commitDisabled=" + commitDisabled 
                 + ", " + super.toString() + "]";
     }
 

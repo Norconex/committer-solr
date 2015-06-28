@@ -7,10 +7,12 @@
   </properties>
   <body>
 
-    <release version="2.0.3" date="2015-06-22" description="Minor release">
+    <release version="2.1.0-SNAPSHOT" date="2015-??-??" description="Minor release">
       <action dev="martinfou" type="add">
-        New flag "commitDisabled" for the config file to decide 
-        if the commit is done by the client or the server.
+        New SolrCommitter#setCommitDisabled(boolean) method (and 
+        "commitDisabled" flag for XML configuration) to decide 
+        if the Solr commits should be perfommed by this committer, or leave
+        it to the server.
       </action>
     </release>
 
