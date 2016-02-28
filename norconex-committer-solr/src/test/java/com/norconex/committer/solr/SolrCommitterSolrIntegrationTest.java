@@ -286,7 +286,8 @@ public class SolrCommitterSolrIntegrationTest extends AbstractSolrTestCase {
         assertEquals(0, results.getNumFound());
     }
 
-    private SolrDocumentList queryId(String id) throws SolrServerException {
+    private SolrDocumentList queryId(String id) 
+            throws SolrServerException, IOException {
         ModifiableSolrParams solrParams = new ModifiableSolrParams();
         solrParams.set("q", String.format("%s:%s",
                 SolrCommitter.DEFAULT_SOLR_ID_FIELD, id));
@@ -295,7 +296,8 @@ public class SolrCommitterSolrIntegrationTest extends AbstractSolrTestCase {
         return results;
     }
     
-    private SolrDocumentList getAllDocs() throws SolrServerException{
+    private SolrDocumentList getAllDocs() 
+            throws SolrServerException, IOException{
         ModifiableSolrParams solrParams = new ModifiableSolrParams();
           solrParams.set("q", "*:*");
         QueryResponse response = server.query(solrParams);
@@ -317,6 +319,7 @@ public class SolrCommitterSolrIntegrationTest extends AbstractSolrTestCase {
         outCommitter.setQueueSize(100);
         outCommitter.setCommitBatchSize(50);
         outCommitter.setSolrURL("http://solrurl.com/test");
+        outCommitter.setCommitDisabled(false);
         outCommitter.setUpdateUrlParam("uparam1", "uvalue1");
         outCommitter.setUpdateUrlParam("uparam2", "uvalue2");
 //        outCommitter.setDeleteUrlParam("dparam1", "dvalue1");
