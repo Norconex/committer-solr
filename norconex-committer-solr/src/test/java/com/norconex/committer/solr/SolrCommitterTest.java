@@ -281,7 +281,8 @@ public class SolrCommitterTest extends AbstractSolrTestCase {
         assertEquals(0, results.getNumFound());
     }
 
-    private SolrDocumentList queryId(String id) throws SolrServerException {
+    private SolrDocumentList queryId(String id) 
+            throws SolrServerException, IOException {
         ModifiableSolrParams solrParams = new ModifiableSolrParams();
         solrParams.set("q", String.format("%s:%s",
                 SolrCommitter.DEFAULT_SOLR_ID_FIELD, id));
@@ -290,7 +291,8 @@ public class SolrCommitterTest extends AbstractSolrTestCase {
         return results;
     }
     
-    private SolrDocumentList getAllDocs() throws SolrServerException{
+    private SolrDocumentList getAllDocs() 
+            throws SolrServerException, IOException{
         ModifiableSolrParams solrParams = new ModifiableSolrParams();
           solrParams.set("q", "*:*");
         QueryResponse response = server.query(solrParams);
