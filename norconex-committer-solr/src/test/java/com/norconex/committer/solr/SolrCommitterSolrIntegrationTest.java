@@ -1,4 +1,4 @@
-/* Copyright 2010-2015 Norconex Inc.
+/* Copyright 2010-2016 Norconex Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.CharEncoding;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
@@ -61,7 +62,8 @@ public class SolrCommitterSolrIntegrationTest extends AbstractSolrTestCase {
     @Rule
     public TemporaryFolder tempFolder = new TemporaryFolder();
 
-    private SolrClient server = new HttpSolrClient("http://localhost:8983/solr/collection1/");
+    private SolrClient server = new HttpSolrClient.Builder(
+            "http://localhost:8983/solr/collection1/").build();
 
     private SolrCommitter committer;
 
@@ -70,11 +72,8 @@ public class SolrCommitterSolrIntegrationTest extends AbstractSolrTestCase {
     @Before
     public void setup() throws Exception  {
         File solrHome = tempFolder.newFolder("solr");
-            initCore("src/test/resources/solrconfig.xml",
-                    "src/test/resources/schema.xml", solrHome.toString());
+        initCore("solrconfig.xml", "schema.xml", solrHome.toString());
 
-
-        
         committer = new SolrCommitter(new ISolrServerFactory() {
             private static final long serialVersionUID = 4648990433469043210L;
             @Override
@@ -102,7 +101,7 @@ public class SolrCommitterSolrIntegrationTest extends AbstractSolrTestCase {
     public void testCommitAdd() throws Exception {
 
         String content = "hello world!";
-        InputStream is = IOUtils.toInputStream(content);
+        InputStream is = IOUtils.toInputStream(content, CharEncoding.UTF_8);
         
         String id = "1";
         Properties metadata = new Properties();
@@ -141,10 +140,10 @@ public class SolrCommitterSolrIntegrationTest extends AbstractSolrTestCase {
     @Test
     public void testAddWithQueueContaining2documents() throws Exception{
         String content = "Document 1";
-        InputStream is = IOUtils.toInputStream(content);
+        InputStream is = IOUtils.toInputStream(content, CharEncoding.UTF_8);
         
         String content2 = "Document 2";
-        InputStream is2 = IOUtils.toInputStream(content2);
+        InputStream is2 = IOUtils.toInputStream(content2, CharEncoding.UTF_8);
         
         String id = "1";
         String id2 = "2";
@@ -173,20 +172,23 @@ public class SolrCommitterSolrIntegrationTest extends AbstractSolrTestCase {
         
         System.out.println("deleted " + worked.toString());
         String content1 = "Document 1";
-        InputStream doc1Content = IOUtils.toInputStream(content1);
+        InputStream doc1Content = 
+                IOUtils.toInputStream(content1, CharEncoding.UTF_8);
         String id1 = "1";
         Properties doc1Metadata = new Properties();
         doc1Metadata.addString("id", id1);
         
         String content2 = "Document 2";
         String id2 = "2";
-        InputStream doc2Content = IOUtils.toInputStream(content2);
+        InputStream doc2Content = 
+                IOUtils.toInputStream(content2, CharEncoding.UTF_8);
         Properties doc2Metadata = new Properties();
         doc2Metadata.addString("id", "2");
         
         String content3 = "Document 3";
         String id3 = "3";
-        InputStream doc3Content = IOUtils.toInputStream(content3);
+        InputStream doc3Content = 
+                IOUtils.toInputStream(content3, CharEncoding.UTF_8);
         Properties doc3Metadata = new Properties();
         doc2Metadata.addString("id", "3");
         
@@ -221,20 +223,23 @@ public class SolrCommitterSolrIntegrationTest extends AbstractSolrTestCase {
         committer.commit();
         System.out.println("deleted " + worked.toString());
         String content = "Document 1";
-        InputStream doc1Content = IOUtils.toInputStream(content);
+        InputStream doc1Content = 
+                IOUtils.toInputStream(content, CharEncoding.UTF_8);
         String id1 = "1";
         Properties doc1Metadata = new Properties();
         doc1Metadata.addString("id", id1);
         
         String content2 = "Document 2";
         String id2 = "2";
-        InputStream doc2Content = IOUtils.toInputStream(content2);
+        InputStream doc2Content = 
+                IOUtils.toInputStream(content2, CharEncoding.UTF_8);
         Properties doc2Metadata = new Properties();
         doc2Metadata.addString("id", "2");
         
         String content3 = "Document 3";
         String id3 = "3";
-        InputStream doc3Content = IOUtils.toInputStream(content3);
+        InputStream doc3Content = 
+                IOUtils.toInputStream(content3, CharEncoding.UTF_8);
         Properties doc3Metadata = new Properties();
         doc2Metadata.addString("id", "3");
         
@@ -319,7 +324,7 @@ public class SolrCommitterSolrIntegrationTest extends AbstractSolrTestCase {
         outCommitter.setQueueSize(100);
         outCommitter.setCommitBatchSize(50);
         outCommitter.setSolrURL("http://solrurl.com/test");
-        outCommitter.setCommitDisabled(false);
+        outCommitter.setSolrCommitDisabled(false);
         outCommitter.setUpdateUrlParam("uparam1", "uvalue1");
         outCommitter.setUpdateUrlParam("uparam2", "uvalue2");
 //        outCommitter.setDeleteUrlParam("dparam1", "dvalue1");

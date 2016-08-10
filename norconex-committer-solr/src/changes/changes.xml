@@ -7,6 +7,13 @@
   </properties>
   <body>
 
+    <release version="2.1.1-SNAPSHOT" date="2016-??-??" description="Maintenance release">
+      <action dev="essiembre" type="update">
+        Dependency updates: Norconex Committer Core 2.0.4, Apache SolrJ 6.1.0, 
+        Apache HttpClient 4.5.2, Apache HttpCore 4.4.5.
+      </action>
+    </release>
+
     <release version="2.1.0" date="2016-02-28" description="Minor release">
       <action dev="martinfou" type="add">
         New SolrCommitter#setCommitDisabled(boolean) method (and 
@@ -15,7 +22,7 @@
         it to the server.
       </action>
       <action dev="essiembre" type="update">
-        Maven dependency updates: Norconex Committer Core 2.0.3.
+        Dependency updates: Norconex Committer Core 2.0.3.
       </action>
     </release>
 
