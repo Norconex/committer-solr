@@ -1,5 +1,5 @@
 <!-- 
-   Copyright 2010-2015 Norconex Inc.
+   Copyright 2010-2016 Norconex Inc.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.norconex.collectors</groupId>
   <artifactId>norconex-committer-solr</artifactId>
-  <version>2.1.0</version>
+  <version>2.2.0</version>
   <name>Norconex Committer Solr</name>
   
   
@@ -27,7 +27,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>    
     <site.baseurl/>
-    <solr.version>5.0.0</solr.version>
+    <solr.version>6.1.0</solr.version>
   </properties>
   <inceptionYear>2009</inceptionYear>
 
@@ -61,7 +61,7 @@
     <dependency>
         <groupId>com.norconex.collectors</groupId>
         <artifactId>norconex-committer-core</artifactId>
-        <version>2.0.3</version>
+        <version>2.0.5</version>
     </dependency>
     <dependency>
         <groupId>org.slf4j</groupId>
@@ -72,11 +72,6 @@
         <groupId>org.slf4j</groupId>
         <artifactId>slf4j-log4j12</artifactId>
         <version>1.7.12</version>
-    </dependency>
-    <dependency>
-        <groupId>commons-codec</groupId>
-        <artifactId>commons-codec</artifactId>
-        <version>1.10</version>
     </dependency>
     <dependency>
         <groupId>org.apache.solr</groupId>
@@ -97,18 +92,18 @@
       <dependency>
         <groupId>org.apache.httpcomponents</groupId>
         <artifactId>httpclient</artifactId>
-        <version>4.5.1</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.httpcomponents</groupId>
-        <artifactId>httpcore</artifactId>
-        <version>4.4.3</version>
+        <version>4.5.2</version>
       </dependency>
       <dependency>
         <groupId>org.apache.httpcomponents</groupId>
         <artifactId>httpmime</artifactId>
-        <version>4.5.1</version>
+        <version>4.5.2</version>
       </dependency>     
+      <dependency>
+        <groupId>org.apache.httpcomponents</groupId>
+        <artifactId>httpcore</artifactId>
+        <version>4.4.5</version>
+      </dependency>
     </dependencies>  
   </dependencyManagement>  
   
@@ -192,6 +187,7 @@
         <configuration>
           <source>1.7</source>
           <target>1.7</target>
+          <encoding>UTF-8</encoding>
         </configuration>
       </plugin> 
       <plugin>
@@ -239,11 +235,15 @@
         <configuration>
           <overview>${basedir}/src/main/javadoc/overview.html</overview>
           <show>protected</show>
-          <detectLinks>true</detectLinks>
+          <nodeprecated>false</nodeprecated>
           <source>1.7</source>
+          <detectLinks>false</detectLinks>
           <links>
-            <link>http://lucene.apache.org/solr/5_0_0/solr-core/</link>
-            <link>http://lucene.apache.org/solr/5_0_0/solr-test-framework/</link>
+            <link>https://www.norconex.com/product/commons-lang/apidocs/</link>
+            <link>https://www.norconex.com/collectors/committer-core/latest/apidocs/</link>
+            <link>https://lucene.apache.org/solr/6_1_0/solr-core/</link>
+            <link>https://lucene.apache.org/solr/6_1_0/solr-test-framework/</link>
+            <link>https://commons.apache.org/proper/commons-configuration/javadocs/v1.10/apidocs/</link>
           </links>
         </configuration>
         <executions>
@@ -279,6 +279,14 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
         <version>2.6</version>
+        <configuration>
+          <archive>
+            <manifest>
+              <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+              <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+            </manifest>
+          </archive>
+        </configuration>
         <executions>
           <execution>
             <goals>
@@ -360,6 +368,7 @@
         <artifactId>maven-project-info-reports-plugin</artifactId>
         <version>2.7</version>
         <configuration>
+          <dependencyDetailsEnabled>false</dependencyDetailsEnabled>
           <dependencyLocationsEnabled>false</dependencyLocationsEnabled>
         </configuration>
         <reportSets>
@@ -378,7 +387,7 @@
           <header><![CDATA[
             <style>div.aboutLanguage .siteLink {font-size: 2em;}</style>
             <span class="siteLink">
-              <a target="_top" href="http://www.norconex.com/product/committer-solr">Norconex Solr Committer</a>
+              <a target="_top" href="https://www.norconex.com/product/committer-solr">Norconex Solr Committer</a>
             </span>
             ]]>
           </header>
@@ -396,14 +405,19 @@
             </script>
             <a style="font-size: 1.4em;" target="_top" href="https://github.com/norconex/committer-solr/issues">Submit an Issue</a>
             &nbsp;&nbsp;|&nbsp;&nbsp; 
-            <a style="font-size: 1.4em;" target="_top" href="http://www.norconex.com">www.norconex.com</a>
+            <a style="font-size: 1.4em;" target="_top" href="https://www.norconex.com">www.norconex.com</a>
             ]]>
           </footer>          
           <show>protected</show>
-          <detectLinks>true</detectLinks>
+          <nodeprecated>false</nodeprecated>
+          <source>1.7</source>
+          <detectLinks>false</detectLinks>          
           <links>
-            <link>http://lucene.apache.org/solr/5_0_0/solr-core/</link>
-            <link>http://lucene.apache.org/solr/5_0_0/solr-test-framework/</link>
+            <link>https://www.norconex.com/product/commons-lang/apidocs/</link>
+            <link>https://www.norconex.com/collectors/committer-core/latest/apidocs/</link>
+            <link>https://lucene.apache.org/solr/6_1_0/solr-core/</link>
+            <link>https://lucene.apache.org/solr/6_1_0/solr-test-framework/</link>
+            <link>https://commons.apache.org/proper/commons-configuration/javadocs/v1.10/apidocs/</link>
           </links>          
         </configuration>
         <reportSets>
@@ -420,10 +434,10 @@
     </plugins>
   </reporting>  
 
-  <url>http://norconex.com/product/committer-solr/</url>
+  <url>https://norconex.com/product/committer-solr/</url>
   <organization>
     <name>Norconex Inc.</name>
-    <url>http://www.norconex.com</url>
+    <url>https://www.norconex.com</url>
   </organization>
   <scm>
     <url>https://github.com/Norconex/committer-solr</url>
@@ -441,20 +455,9 @@
         <name>Pascal Essiembre</name>
         <email>pascal.essiembre@norconex.com</email>
         <organization>Norconex Inc.</organization>
-        <organizationUrl>http://www.norconex.com</organizationUrl>
+        <organizationUrl>https://www.norconex.com</organizationUrl>
         <roles>
           <role>project leader</role>
-          <role>developer</role>
-        </roles>
-        <timezone>-4</timezone>
-    </developer>
-    <developer>
-        <id>pascaldimassimo</id>
-        <name>Pascal Dimassimo</name>
-        <email>pascal.dimassimo@norconex.com</email>
-        <organization>Norconex Inc.</organization>
-        <organizationUrl>http://www.norconex.com</organizationUrl>
-        <roles>
           <role>developer</role>
         </roles>
         <timezone>-4</timezone>

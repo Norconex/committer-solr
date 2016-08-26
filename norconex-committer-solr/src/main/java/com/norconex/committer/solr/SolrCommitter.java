@@ -1,4 +1,4 @@
-/* Copyright 2010-2015 Norconex Inc.
+/* Copyright 2010-2016 Norconex Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -56,7 +56,7 @@ import com.norconex.commons.lang.map.Properties;
  *         &lt;param name="(parameter name)"&gt;(parameter value)&lt;/param&gt;
  *         &lt;-- multiple param tags allowed --&gt;
  *      &lt;/solrUpdateURLParams&gt;
- *      &lt;commitDisabled&gt;[false|true]&lt;/commitDisabled&gt;
+ *      &lt;solrCommitDisabled&gt;[false|true]&lt;/solrCommitDisabled&gt;
  *      &lt;sourceReferenceField keep="[false|true]"&gt;
  *         (Optional name of field that contains the document reference, when 
  *         the default document reference is not used.  The reference value
@@ -81,10 +81,11 @@ import com.norconex.commons.lang.map.Properties;
  *          Default is: content)
  *      &lt;/targetContentField&gt;
  *      &lt;commitBatchSize&gt;
- *          (max number of docs to send Solr at once)
+ *         (Maximum number of docs to send Solr at once. Will issue a Solr 
+ *          commit unless "solrCommitDisabled" is true)
  *      &lt;/commitBatchSize&gt;
  *      &lt;queueDir&gt;(optional path where to queue files)&lt;/queueDir&gt;
- *      &lt;queueSize&gt;(max queue size before committing)&lt;/queueSize&gt;
+ *      &lt;queueSize&gt;(max queue size before sending to Solr)&lt;/queueSize&gt;
  *      &lt;maxRetries&gt;(max retries upon commit failures)&lt;/maxRetries&gt;
  *      &lt;maxRetryWait&gt;(max delay between retries)&lt;/maxRetryWait&gt;
  *  &lt;/committer&gt;
@@ -92,7 +93,6 @@ import com.norconex.commons.lang.map.Properties;
  * 
  * @author Pascal Essiembre
  */
-//TODO test if same files can be picked up more than once when multi-threading
 public class SolrCommitter extends AbstractMappedCommitter {
 
     private static final Logger LOG = LogManager.getLogger(SolrCommitter.class);
@@ -103,7 +103,7 @@ public class SolrCommitter extends AbstractMappedCommitter {
     public static final String DEFAULT_SOLR_CONTENT_FIELD = "content";
 
     private String solrURL;
-    private boolean commitDisabled;
+    private boolean solrCommitDisabled;
 
     private final Map<String, String> updateUrlParams = 
             new HashMap<String, String>();
@@ -173,26 +173,52 @@ public class SolrCommitter extends AbstractMappedCommitter {
      * let the server auto-commit.
      * @param commitDisabled <code>true</code> if commit is disabled
      * @since 2.1.0
+     * @deprecated Since 2.2.0 use {@link #setSolrCommitDisabled(boolean)}
      */
+    @Deprecated
     public void setCommitDisabled(boolean commitDisabled) {
-        this.commitDisabled = commitDisabled;
+        setSolrCommitDisabled(commitDisabled);
     }
     /**
      * Gets the commitDisabled variable to find out if the client should 
      * commit or let the server auto-commit.
      * @return <code>true</code> if commit is disabled.
      * @since 2.1.0
+     * @deprecated Since 2.2.0 use {@link #isSolrCommitDisabled()}
      */
+    @Deprecated
     public boolean isCommitDisabled() {
-        return commitDisabled;
+        return isSolrCommitDisabled();
     }
+
+    /**
+     * Sets whether to send an explicit commit request at the end of every
+     * batch, or let the server auto-commit.
+     * @param solrCommitDisabled <code>true</code> if sending Solr commit is 
+     *        disabled
+     * @since 2.2.0
+     */
+    public void setSolrCommitDisabled(boolean solrCommitDisabled) {
+        this.solrCommitDisabled = solrCommitDisabled;
+    }
+    /**
+     * Gets whether to send an explicit commit request at the end of every
+     * batch, or let the server auto-commit.
+     * @return <code>true</code> if sending Solr commit is disabled.
+     * @since 2.2.0
+     */
+    public boolean isSolrCommitDisabled() {
+        return solrCommitDisabled;
+    }
+
+    
     @Override
     protected void commitBatch(List<ICommitOperation> batch) {
 
         LOG.info("Sending " + batch.size() 
                 + " documents to Solr for update/deletion.");
         try {
-            SolrClient server = solrServerFactory.createSolrServer(this);
+            SolrClient solrClient = solrServerFactory.createSolrServer(this);
             
             // Add to request all operations in batch, and force a commit
             // whenever we do a "delete" after an "add" to eliminate the
@@ -201,27 +227,27 @@ public class SolrCommitter extends AbstractMappedCommitter {
             
             //TODO before a delete, check if the same reference was previously
             //added before forcing a commit if any additions occurred.
-            //TODO figure out why the committing fix does not always work
             boolean previousWasAddition = false;
             for (ICommitOperation op : batch) {
                 if (op instanceof IAddOperation) {
-                    server.add(buildSolrDocument(
+                    solrClient.add(buildSolrDocument(
                             ((IAddOperation) op).getMetadata()));
                     previousWasAddition = true;
                 } else if (op instanceof IDeleteOperation) {
                     if (previousWasAddition) {
-                        if (!isCommitDisabled()) {
-                            server.commit();
+                        if (!isSolrCommitDisabled()) {
+                            solrClient.commit();
                         }
                     }
-                    server.deleteById(((IDeleteOperation) op).getReference());
+                    solrClient.deleteById(
+                            ((IDeleteOperation) op).getReference());
                     previousWasAddition = false;
                 } else {
                     throw new CommitterException("Unsupported operation:" + op);
                 }
             }
-            if (!isCommitDisabled()) {
-                server.commit();
+            if (!isSolrCommitDisabled()) {
+                solrClient.commit();
             }
         } catch (Exception e) {
           throw new CommitterException(
@@ -231,6 +257,7 @@ public class SolrCommitter extends AbstractMappedCommitter {
     }
     
     private SolrInputDocument buildSolrDocument(Properties fields) {
+        
         SolrInputDocument doc = new SolrInputDocument();
         for (String key : fields.keySet()) {
             List<String> values = fields.getStrings(key);
@@ -255,8 +282,8 @@ public class SolrCommitter extends AbstractMappedCommitter {
             writer.writeEndElement();
         }
 
-        writer.writeStartElement("commitDisabled");
-        writer.writeCharacters(Boolean.toString(isCommitDisabled()));
+        writer.writeStartElement("solrCommitDisabled");
+        writer.writeCharacters(Boolean.toString(isSolrCommitDisabled()));
         writer.writeEndElement();
         
         writer.writeEndElement();
@@ -266,8 +293,16 @@ public class SolrCommitter extends AbstractMappedCommitter {
     @SuppressWarnings("unchecked")
     protected void loadFromXml(XMLConfiguration xml) {
         setSolrURL(xml.getString("solrURL", getSolrURL()));
-        setCommitDisabled(xml.getBoolean("commitDisabled", isCommitDisabled()));
-
+        
+        String commitDisabled = xml.getString("commitDisabled", null);
+        if (StringUtils.isNotBlank(commitDisabled)) {
+            LOG.warn("\"commitDisabled\" was renamed to "
+                    + "\"solrCommitDisabled\".");
+            setSolrCommitDisabled(Boolean.valueOf(commitDisabled));
+        } else {
+            setSolrCommitDisabled(xml.getBoolean(
+                    "solrCommitDisabled", isSolrCommitDisabled()));
+        }
         List<HierarchicalConfiguration> uparams = 
                 xml.configurationsAt("solrUpdateURLParams.param");
         for (HierarchicalConfiguration param : uparams) {
@@ -282,7 +317,7 @@ public class SolrCommitter extends AbstractMappedCommitter {
             .append(solrServerFactory)
             .append(solrURL)
             .append(updateUrlParams)
-            .append(commitDisabled)
+            .append(solrCommitDisabled)
             .toHashCode();
     }
 
@@ -303,7 +338,7 @@ public class SolrCommitter extends AbstractMappedCommitter {
             .append(solrServerFactory, other.solrServerFactory)
             .append(solrURL, other.solrURL)
             .append(updateUrlParams, other.updateUrlParams)
-            .append(commitDisabled, other.commitDisabled)
+            .append(solrCommitDisabled, other.solrCommitDisabled)
             .isEquals();
     }
     
@@ -311,7 +346,7 @@ public class SolrCommitter extends AbstractMappedCommitter {
     public String toString() {
         return "SolrCommitter [solrURL=" + solrURL + ", updateUrlParams="
                 + updateUrlParams + ", solrServerFactory=" + solrServerFactory
-                + ", commitDisabled=" + commitDisabled 
+                + ", solrCommitDisabled=" + solrCommitDisabled 
                 + ", " + super.toString() + "]";
     }
 
@@ -332,11 +367,13 @@ public class SolrCommitter extends AbstractMappedCommitter {
         private static final long serialVersionUID = 5820720860417411567L;
         private HttpSolrClient server;
         @Override
-        public SolrClient createSolrServer(SolrCommitter solrCommitter) {
+        public synchronized SolrClient createSolrServer(
+                SolrCommitter solrCommitter) {
             if (server == null) {
                 if (StringUtils.isBlank(solrCommitter.getSolrURL())) {
                     throw new CommitterException("Solr URL is undefined.");
                 }
+                
                 server = new CommitterSolrClient(solrCommitter.getSolrURL());
                 for (Entry<String, String> entry : 
                         solrCommitter.updateUrlParams.entrySet()) {
@@ -385,7 +422,10 @@ public class SolrCommitter extends AbstractMappedCommitter {
     // variable with no way to set it.
     static class CommitterSolrClient extends HttpSolrClient {
         private static final long serialVersionUID = 4152566496035344194L;
+        @SuppressWarnings("deprecation")
         public CommitterSolrClient(String baseURL) {
+            // We have to use the straight constructor version even if 
+            // deprecated in order to initialise the invariantParams.
             super(baseURL);
             invariantParams = new ModifiableSolrParams();
         }
