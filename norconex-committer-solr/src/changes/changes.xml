@@ -7,9 +7,13 @@
   </properties>
   <body>
 
-    <release version="2.1.1-SNAPSHOT" date="2016-??-??" description="Maintenance release">
+    <release version="2.2.0" date="2016-08-26" description="Feature release">
+      <action dev="essiembre" type="add">
+        Now ships with new install script that automates copying of dependent 
+        libraries, taking into account possible version conflicts.
+      </action>
       <action dev="essiembre" type="update">
-        Dependency updates: Norconex Committer Core 2.0.4, Apache SolrJ 6.1.0, 
+        Dependency updates: Norconex Committer Core 2.0.5, Apache SolrJ 6.1.0, 
         Apache HttpClient 4.5.2, Apache HttpCore 4.4.5.
       </action>
     </release>
