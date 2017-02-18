@@ -1,4 +1,4 @@
-/* Copyright 2010-2016 Norconex Inc.
+/* Copyright 2010-2017 Norconex Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -105,8 +105,7 @@ public class SolrCommitter extends AbstractMappedCommitter {
     private String solrURL;
     private boolean solrCommitDisabled;
 
-    private final Map<String, String> updateUrlParams = 
-            new HashMap<String, String>();
+    private final Map<String, String> updateUrlParams = new HashMap<>();
     
     private final ISolrServerFactory solrServerFactory;
 

@@ -6,6 +6,19 @@
     <author email="info@norconex.com">Norconex Inc.</author>
   </properties>
   <body>
+  
+    <release version="2.2.1-SNAPSHOT" date="2017-??-??" description="Maintenance release">
+      <action dev="essiembre" type="add">
+        Added schema-based XML configuration validation.
+      </action>
+      <action dev="essiembre" type="update">
+        Now requires Java 8+ to run (Solr 6.x requirement).
+      </action>
+      <action dev="essiembre" type="update">
+        Maven dependency updates: Norconex Commons Lang 1.13.0,
+        Norconex Committer Core 2.0.6, Apache Solr 6.4.1.
+      </action>
+    </release>
 
     <release version="2.2.0" date="2016-08-26" description="Feature release">
       <action dev="essiembre" type="add">
