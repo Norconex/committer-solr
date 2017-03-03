@@ -15,6 +15,11 @@
         Now requires Java 8+ to run (Solr 6.x requirement).
       </action>
       <action dev="essiembre" type="update">
+        XML configuration entries expecting millisecond durations
+        can now be provided in human-readable format 
+        (e.g., "5 minutes and 30 seconds" or "5m30s").
+      </action>
+      <action dev="essiembre" type="update">
         Maven dependency updates: Norconex Commons Lang 1.13.0,
         Norconex Committer Core 2.0.6, Apache Solr 6.4.1.
       </action>
