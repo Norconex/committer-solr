@@ -7,9 +7,12 @@
   </properties>
   <body>
   
-    <release version="2.2.1-SNAPSHOT" date="2017-??-??" description="Maintenance release">
+    <release version="2.3.0-SNAPSHOT" date="2017-??-??" description="Maintenance release">
       <action dev="essiembre" type="add">
         Added schema-based XML configuration validation.
+      </action>
+      <action dev="essiembre" type="add">
+        Now distributed with utility scripts.
       </action>
       <action dev="essiembre" type="update">
         Now requires Java 8+ to run (Solr 6.x requirement).
