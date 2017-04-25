@@ -1,4 +1,4 @@
-/* Copyright 2010-2016 Norconex Inc.
+/* Copyright 2010-2017 Norconex Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,11 +42,18 @@ import com.norconex.committer.core.IAddOperation;
 import com.norconex.committer.core.ICommitOperation;
 import com.norconex.committer.core.IDeleteOperation;
 import com.norconex.commons.lang.map.Properties;
+import com.norconex.commons.lang.time.DurationParser;
 
 /**
  * Commits documents to Apache Solr.
  * <p>
  * XML configuration usage:
+ * </p>
+ * 
+ * <p>
+ * As of 2.2.1, XML configuration entries expecting millisecond durations
+ * can be provided in human-readable format (English only), as per 
+ * {@link DurationParser} (e.g., "5 minutes and 30 seconds" or "5m30s").
  * </p>
  * 
  * <pre>
@@ -87,7 +94,7 @@ import com.norconex.commons.lang.map.Properties;
  *      &lt;queueDir&gt;(optional path where to queue files)&lt;/queueDir&gt;
  *      &lt;queueSize&gt;(max queue size before sending to Solr)&lt;/queueSize&gt;
  *      &lt;maxRetries&gt;(max retries upon commit failures)&lt;/maxRetries&gt;
- *      &lt;maxRetryWait&gt;(max delay between retries)&lt;/maxRetryWait&gt;
+ *      &lt;maxRetryWait&gt;(max delay in milliseconds between retries)&lt;/maxRetryWait&gt;
  *  &lt;/committer&gt;
  * </pre>
  * 
@@ -105,8 +112,7 @@ public class SolrCommitter extends AbstractMappedCommitter {
     private String solrURL;
     private boolean solrCommitDisabled;
 
-    private final Map<String, String> updateUrlParams = 
-            new HashMap<String, String>();
+    private final Map<String, String> updateUrlParams = new HashMap<>();
     
     private final ISolrServerFactory solrServerFactory;
 

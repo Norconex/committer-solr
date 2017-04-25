@@ -1,4 +1,4 @@
-/* Copyright 2010-2016 Norconex Inc.
+/* Copyright 2010-2017 Norconex Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,7 +37,7 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import com.norconex.committer.solr.SolrCommitter.ISolrServerFactory;
-import com.norconex.commons.lang.config.ConfigurationUtil;
+import com.norconex.commons.lang.config.XMLConfigurationUtil;
 import com.norconex.commons.lang.map.Properties;
 
 /**
@@ -330,7 +330,7 @@ public class SolrCommitterSolrIntegrationTest extends AbstractSolrTestCase {
 //        outCommitter.setDeleteUrlParam("dparam1", "dvalue1");
 //        outCommitter.setDeleteUrlParam("dparam2", "dvalue2");
         System.out.println("Writing/Reading this: " + outCommitter);
-        ConfigurationUtil.assertWriteRead(outCommitter);
+        XMLConfigurationUtil.assertWriteRead(outCommitter);
     }
     
 }

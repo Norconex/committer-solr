@@ -1,4 +1,4 @@
-/* Copyright 2010-2016 Norconex Inc.
+/* Copyright 2010-2017 Norconex Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,9 +17,13 @@ package com.norconex.committer.solr;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.CharEncoding;
+import org.apache.commons.lang3.ClassUtils;
+import org.apache.log4j.Level;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.embedded.EmbeddedSolrServer;
@@ -30,13 +34,15 @@ import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.common.params.ModifiableSolrParams;
 import org.apache.solr.util.AbstractSolrTestCase;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import com.norconex.committer.solr.SolrCommitter.ISolrServerFactory;
-import com.norconex.commons.lang.config.ConfigurationUtil;
+import com.norconex.commons.lang.config.XMLConfigurationUtil;
+import com.norconex.commons.lang.log.CountingConsoleAppender;
 import com.norconex.commons.lang.map.Properties;
 
 /**
@@ -329,7 +335,20 @@ public class SolrCommitterTest extends AbstractSolrTestCase {
 //        outCommitter.setDeleteUrlParam("dparam1", "dvalue1");
 //        outCommitter.setDeleteUrlParam("dparam2", "dvalue2");
         System.out.println("Writing/Reading this: " + outCommitter);
-        ConfigurationUtil.assertWriteRead(outCommitter);
+        XMLConfigurationUtil.assertWriteRead(outCommitter);
     }
     
+    @Test
+    public void testValidation() throws IOException {
+        CountingConsoleAppender appender = new CountingConsoleAppender();
+        appender.startCountingFor(XMLConfigurationUtil.class, Level.WARN);
+        try (Reader r = new InputStreamReader(getClass().getResourceAsStream(
+                ClassUtils.getShortClassName(getClass()) + ".xml"))) {
+            XMLConfigurationUtil.newInstance(r);
+        } finally {
+            appender.stopCountingFor(XMLConfigurationUtil.class);
+        }
+        Assert.assertEquals("Validation warnings/errors were found.", 
+                0, appender.getCount());
+    }
 }
