@@ -74,7 +74,8 @@ import com.norconex.commons.lang.time.DurationParser;
  *      &lt;/sourceReferenceField&gt;
  *      &lt;targetReferenceField&gt;
  *         (Name of Solr target field where the store a document unique 
- *         identifier (idSourceField).  If not specified, default is "id".) 
+ *         identifier (sourceReferenceField).  
+ *         If not specified, default is "id".) 
  *      &lt;/targetReferenceField&gt;
  *      &lt;sourceContentField keep="[false|true]"&gt;
  *         (If you wish to use a metadata field to act as the document 
