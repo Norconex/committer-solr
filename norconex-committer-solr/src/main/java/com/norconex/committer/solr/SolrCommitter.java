@@ -213,7 +213,7 @@ public class SolrCommitter extends AbstractMappedCommitter {
     }
     /**
      * Constructor.
-     * @param solrServerFactory Solr server factory
+     * @param solrClient SolrClient to use
      */
     public SolrCommitter(SolrClient solrClient) {
         this.solrClient = solrClient;
