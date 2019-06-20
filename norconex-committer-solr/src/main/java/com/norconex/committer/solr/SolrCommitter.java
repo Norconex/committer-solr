@@ -1,4 +1,4 @@
-/* Copyright 2010-2017 Norconex Inc.
+/* Copyright 2010-2019 Norconex Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,6 @@
  */
 package com.norconex.committer.solr;
 
-import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,44 +25,130 @@ import javax.xml.stream.XMLStreamWriter;
 
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.configuration.XMLConfiguration;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.apache.solr.client.solrj.SolrClient;
-import org.apache.solr.client.solrj.impl.HttpSolrClient;
+import org.apache.solr.client.solrj.request.UpdateRequest;
 import org.apache.solr.common.SolrInputDocument;
-import org.apache.solr.common.params.ModifiableSolrParams;
 
 import com.norconex.committer.core.AbstractMappedCommitter;
 import com.norconex.committer.core.CommitterException;
 import com.norconex.committer.core.IAddOperation;
 import com.norconex.committer.core.ICommitOperation;
 import com.norconex.committer.core.IDeleteOperation;
+import com.norconex.commons.lang.encrypt.EncryptionKey;
+import com.norconex.commons.lang.encrypt.EncryptionUtil;
 import com.norconex.commons.lang.map.Properties;
 import com.norconex.commons.lang.time.DurationParser;
+import com.norconex.commons.lang.xml.EnhancedXMLStreamWriter;
 
 /**
- * Commits documents to Apache Solr.
  * <p>
- * XML configuration usage:
+ * Commits documents to Apache Solr.
  * </p>
  * 
+ * <h3>Solr Client:</h3>
+ * <p>
+ * As of 2.4.0, it is possible to specify which type of 
+ * <a href="https://lucene.apache.org/solr/guide/8_1/using-solrj.html#types-of-solrclients">
+ * Solr Client</a> to use.
+ * The expected configuration value of "solrURL" is influenced
+ * by the client type chosen.  Default client type is 
+ * <code>HttpSolrClient</code>. The clients are:
+ * </p>
+ * <dl>
+ *   <dt>HttpSolrClient</dt>
+ *     <dd>For direct access to a single Solr node. Ideal for 
+ *         local development. Needs a Solr URL. Default client.</dd>
+ *   <dt>LBHttpSolrClient</dt>
+ *     <dd>Simple load-balancing as an alternative to an external load balancer.
+ *         Needs two or more Solr node URLs (comma-separated).</dd>
+ *   <dt>ConcurrentUpdateSolrClient</dt>
+ *     <dd>Optimized for mass upload on a single node.  Not best for queries.
+ *         Needs a Solr URL.</dd>
+ *   <dt>CloudSolrClient</dt>
+ *     <dd>For use with a SolrCloud cluster. Needs a comma-separated list 
+ *         of Zookeeper hosts.</dd>
+ *   <dt>Http2SolrClient</dt>
+ *     <dd>Same as HttpSolrClient but for HTTP/2 support. Marked as
+ *         experimental by Apache.</dd>
+ *   <dt>LBHttp2SolrClient</dt>
+ *     <dd>Same as LBHttpSolrClient but for HTTP/2 support. Marked as
+ *         experimental by Apache.</dd>
+ *   <dt>ConcurrentUpdateHttp2SolrClient</dt>
+ *     <dd>Same as LBHttpSolrClient but for HTTP/2 support. Marked as
+ *         experimental by Apache.</dd>
+ * </dl>
+ * 
+ * <h3>Authentication</h3>
+ * <p>
+ * Since 2.4.0, BASIC authentication is supported for password-protected 
+ * Solr installations.
+ * The <code>password</code> can optionally be
+ * encrypted using {@link EncryptionUtil} (or command-line "encrypt.bat"
+ * or "encrypt.sh").
+ * In order for the password to be decrypted properly, you need
+ * to specify the encryption key used to encrypt it. The key can be stored
+ * in a few supported locations and a combination of
+ * <code>passwordKey</code>
+ * and <code>passwordKeySource</code> must be specified to properly
+ * locate the key. The supported sources are:
+ * </p>
+ * <table border="1" summary="">
+ *   <tr>
+ *     <th><code>passwordKeySource</code></th>
+ *     <th><code>passwordKey</code></th>
+ *   </tr>
+ *   <tr>
+ *     <td><code>key</code></td>
+ *     <td>The actual encryption key.</td>
+ *   </tr>
+ *   <tr>
+ *     <td><code>file</code></td>
+ *     <td>Path to a file containing the encryption key.</td>
+ *   </tr>
+ *   <tr>
+ *     <td><code>environment</code></td>
+ *     <td>Name of an environment variable containing the key.</td>
+ *   </tr>
+ *   <tr>
+ *     <td><code>property</code></td>
+ *     <td>Name of a JVM system property containing the key.</td>
+ *   </tr>
+ * </table>
+ *  
  * <p>
  * As of 2.2.1, XML configuration entries expecting millisecond durations
  * can be provided in human-readable format (English only), as per 
  * {@link DurationParser} (e.g., "5 minutes and 30 seconds" or "5m30s").
  * </p>
  * 
+ * <h3>XML configuration usage:</h3>
+ * 
  * <pre>
  *  &lt;committer class="com.norconex.committer.solr.SolrCommitter"&gt;
+ *      &lt;solrClientType&gt;
+ *         (See class documentation for options. Default: HttpSolrClient.)
+ *      &lt;/solrClientType&gt;
  *      &lt;solrURL&gt;(URL to Solr)&lt;/solrURL&gt;
  *      &lt;solrUpdateURLParams&gt;
  *         &lt;param name="(parameter name)"&gt;(parameter value)&lt;/param&gt;
  *         &lt;-- multiple param tags allowed --&gt;
  *      &lt;/solrUpdateURLParams&gt;
  *      &lt;solrCommitDisabled&gt;[false|true]&lt;/solrCommitDisabled&gt;
+ *      
+ *      &lt;!-- Use the following if BASIC authentication is required. --&gt;
+ *      &lt;username&gt;(Optional user name)&lt;/username&gt;
+ *      &lt;password&gt;(Optional user password)&lt;/password&gt;
+ *      &lt;!-- Use the following if password is encrypted. --&gt;
+ *      &lt;passwordKey&gt;(the encryption key or a reference to it)&lt;/passwordKey&gt;
+ *      &lt;passwordKeySource&gt;[key|file|environment|property]&lt;/passwordKeySource&gt;
+ *      
  *      &lt;sourceReferenceField keep="[false|true]"&gt;
  *         (Optional name of field that contains the document reference, when 
  *         the default document reference is not used.  The reference value
@@ -109,13 +194,17 @@ public class SolrCommitter extends AbstractMappedCommitter {
     /** Default Solr content field */
     public static final String DEFAULT_SOLR_CONTENT_FIELD = "content";
 
+
+    private SolrClientType solrClientType; 
     private String solrURL;
     private boolean solrCommitDisabled;
-
     private final Map<String, String> updateUrlParams = new HashMap<>();
+    private String username;
+    private String password;
+    private EncryptionKey passwordKey;
     
-    private final ISolrServerFactory solrServerFactory;
-
+    private SolrClient solrClient;
+    
     /**
      * Constructor.
      */
@@ -126,14 +215,27 @@ public class SolrCommitter extends AbstractMappedCommitter {
      * Constructor.
      * @param solrServerFactory Solr server factory
      */
-    public SolrCommitter(ISolrServerFactory solrServerFactory) {
-        if (solrServerFactory == null) {
-            this.solrServerFactory = new DefaultSolrServerFactory();
-        } else {
-            this.solrServerFactory = solrServerFactory;
-        }
+    public SolrCommitter(SolrClient solrClient) {
+        this.solrClient = solrClient;
         setTargetContentField(DEFAULT_SOLR_CONTENT_FIELD);
         setTargetReferenceField(DEFAULT_SOLR_ID_FIELD);
+    }
+
+    /**
+     * Gets the Solr client type.
+     * @return solr client type
+     * @since 2.4.0
+     */
+    public SolrClientType getSolrClientType() {
+        return solrClientType;
+    }
+    /**
+     * Sets the Solr client type.
+     * @param solrClientType solr client type
+     * @since 2.4.0
+     */
+    public void setSolrClientType(SolrClientType solrClientType) {
+        this.solrClientType = solrClientType;
     }
 
     /**
@@ -174,28 +276,6 @@ public class SolrCommitter extends AbstractMappedCommitter {
     public Set<String> getUpdateUrlParamNames() {
         return updateUrlParams.keySet();
     }
-    /**
-     * Set the variable to let the client know if it should commit or
-     * let the server auto-commit.
-     * @param commitDisabled <code>true</code> if commit is disabled
-     * @since 2.1.0
-     * @deprecated Since 2.2.0 use {@link #setSolrCommitDisabled(boolean)}
-     */
-    @Deprecated
-    public void setCommitDisabled(boolean commitDisabled) {
-        setSolrCommitDisabled(commitDisabled);
-    }
-    /**
-     * Gets the commitDisabled variable to find out if the client should 
-     * commit or let the server auto-commit.
-     * @return <code>true</code> if commit is disabled.
-     * @since 2.1.0
-     * @deprecated Since 2.2.0 use {@link #isSolrCommitDisabled()}
-     */
-    @Deprecated
-    public boolean isCommitDisabled() {
-        return isSolrCommitDisabled();
-    }
 
     /**
      * Sets whether to send an explicit commit request at the end of every
@@ -217,6 +297,60 @@ public class SolrCommitter extends AbstractMappedCommitter {
         return solrCommitDisabled;
     }
 
+    /**
+     * Gets the username.
+     * @return username the username
+     * @since 2.4.0
+     */
+    public String getUsername() {
+        return username;
+    }
+    /**
+     * Sets the username.
+     * @param username the username
+     * @since 2.4.0
+     */
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    /**
+     * Gets the password.
+     * @return password the password
+     * @since 2.4.0
+     */
+    public String getPassword() {
+        return password;
+    }
+    /**
+     * Sets the password.
+     * @param password the password
+     * @since 2.4.0
+     */
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    /**
+     * Gets the password encryption key.
+     * @return the password key or <code>null</code> if the password is not
+     * encrypted.
+     * @see EncryptionUtil
+     * @since 2.4.0
+     */
+    public EncryptionKey getPasswordKey() {
+        return passwordKey;
+    }
+    /**
+     * Sets the password encryption key. Only required when
+     * the password is encrypted.
+     * @param passwordKey password key
+     * @see EncryptionUtil
+     * @since 2.4.0
+     */
+    public void setPasswordKey(EncryptionKey passwordKey) {
+        this.passwordKey = passwordKey;
+    }
     
     @Override
     protected void commitBatch(List<ICommitOperation> batch) {
@@ -224,7 +358,7 @@ public class SolrCommitter extends AbstractMappedCommitter {
         LOG.info("Sending " + batch.size() 
                 + " documents to Solr for update/deletion.");
         try {
-            SolrClient solrClient = solrServerFactory.createSolrServer(this);
+            SolrClient solrClient = ensureSolrClient();
             
             // Add to request all operations in batch, and force a commit
             // whenever we do a "delete" after an "add" to eliminate the
@@ -235,22 +369,29 @@ public class SolrCommitter extends AbstractMappedCommitter {
             //added before forcing a commit if any additions occurred.
             boolean previousWasAddition = false;
             for (ICommitOperation op : batch) {
+                UpdateRequest req = null;
                 if (op instanceof IAddOperation) {
-                    solrClient.add(buildSolrDocument(
-                            ((IAddOperation) op).getMetadata()));
+                    req = solrAddRequest((IAddOperation) op);
                     previousWasAddition = true;
                 } else if (op instanceof IDeleteOperation) {
-                    if (previousWasAddition) {
-                        if (!isSolrCommitDisabled()) {
-                            solrClient.commit();
-                        }
+                    if (previousWasAddition && !isSolrCommitDisabled()) {
+                        solrClient.commit();
                     }
-                    solrClient.deleteById(
-                            ((IDeleteOperation) op).getReference());
+                    req = solrDeleteRequest((IDeleteOperation) op);
                     previousWasAddition = false;
                 } else {
                     throw new CommitterException("Unsupported operation:" + op);
                 }
+                
+                if (StringUtils.isNotBlank(getUsername())) {
+                    req.setBasicAuthCredentials(
+                            getUsername(), EncryptionUtil.decrypt(
+                                    getPassword(), getPasswordKey()));
+                }
+                for (Entry<String, String> entry : updateUrlParams.entrySet()) {
+                    req.setParam(entry.getKey(), entry.getValue());
+                }
+                solrClient.request(req);
             }
             if (!isSolrCommitDisabled()) {
                 solrClient.commit();
@@ -262,8 +403,26 @@ public class SolrCommitter extends AbstractMappedCommitter {
         LOG.info("Done sending documents to Solr for update/deletion.");    
     }
     
+    protected UpdateRequest solrAddRequest(IAddOperation op) {
+        UpdateRequest req = new UpdateRequest();
+        req.add(buildSolrDocument(op.getMetadata()));
+        return req;
+    }
+    protected UpdateRequest solrDeleteRequest(IDeleteOperation op) {
+        UpdateRequest req = new UpdateRequest();
+        req.deleteById(op.getReference());
+        return req;
+    }
+    
+    private synchronized SolrClient ensureSolrClient() {
+        if (solrClient == null) {
+            solrClient = ObjectUtils.defaultIfNull(solrClientType, 
+                    SolrClientType.HTTP).create(solrURL);
+        }
+        return solrClient;
+    }
+    
     private SolrInputDocument buildSolrDocument(Properties fields) {
-        
         SolrInputDocument doc = new SolrInputDocument();
         for (String key : fields.keySet()) {
             List<String> values = fields.getStrings(key);
@@ -276,43 +435,63 @@ public class SolrCommitter extends AbstractMappedCommitter {
 
     @Override
     protected void saveToXML(XMLStreamWriter writer) throws XMLStreamException {
-        writer.writeStartElement("solrURL");
-        writer.writeCharacters(solrURL);
-        writer.writeEndElement();
+        EnhancedXMLStreamWriter w = new EnhancedXMLStreamWriter(writer);
+        
+        if (solrClientType != null) {
+            w.writeElementString("solrClientType", solrClientType.toString());
+        }
+        w.writeElementString("solrURL", solrURL);
 
-        writer.writeStartElement("solrUpdateURLParams");
+        w.writeStartElement("solrUpdateURLParams");
         for (String name : updateUrlParams.keySet()) {
-            writer.writeStartElement("param");
-            writer.writeAttribute("name", name);
-            writer.writeCharacters(updateUrlParams.get(name));
-            writer.writeEndElement();
+            w.writeStartElement("param");
+            w.writeAttribute("name", name);
+            w.writeCharacters(updateUrlParams.get(name));
+            w.writeEndElement();
         }
 
-        writer.writeStartElement("solrCommitDisabled");
-        writer.writeCharacters(Boolean.toString(isSolrCommitDisabled()));
-        writer.writeEndElement();
+        w.writeElementBoolean("solrCommitDisabled", isSolrCommitDisabled());
+        w.writeElementString("username", getUsername());
+        w.writeElementString("password", getPassword());
+        // Encrypted password:
+        EncryptionKey key = getPasswordKey();
+        if (key != null) {
+            w.writeElementString("passwordKey", key.getValue());
+            if (key.getSource() != null) {
+                w.writeElementString("passwordKeySource",
+                        key.getSource().name().toLowerCase());
+            }
+        }
         
-        writer.writeEndElement();
+        w.writeEndElement();
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     protected void loadFromXml(XMLConfiguration xml) {
-        setSolrURL(xml.getString("solrURL", getSolrURL()));
         
-        String commitDisabled = xml.getString("commitDisabled", null);
-        if (StringUtils.isNotBlank(commitDisabled)) {
-            LOG.warn("\"commitDisabled\" was renamed to "
-                    + "\"solrCommitDisabled\".");
-            setSolrCommitDisabled(Boolean.valueOf(commitDisabled));
-        } else {
-            setSolrCommitDisabled(xml.getBoolean(
-                    "solrCommitDisabled", isSolrCommitDisabled()));
+        String xmlSolrClientType = xml.getString("solrClientType", null);
+        if (StringUtils.isNotBlank(xmlSolrClientType)) {
+            setSolrClientType(SolrClientType.of(xmlSolrClientType));
         }
+        setSolrURL(xml.getString("solrURL", getSolrURL()));
+        setSolrCommitDisabled(xml.getBoolean(
+                "solrCommitDisabled", isSolrCommitDisabled()));
         List<HierarchicalConfiguration> uparams = 
                 xml.configurationsAt("solrUpdateURLParams.param");
         for (HierarchicalConfiguration param : uparams) {
             setUpdateUrlParam(param.getString("[@name]"), param.getString(""));
+        }
+        setUsername(xml.getString("username", getUsername()));
+        setPassword(xml.getString("password", getPassword()));
+        // encrypted password:
+        String xmlKey = xml.getString("passwordKey", null);
+        String xmlSource = xml.getString("passwordKeySource", null);
+        if (StringUtils.isNotBlank(xmlKey)) {
+            EncryptionKey.Source source = null;
+            if (StringUtils.isNotBlank(xmlSource)) {
+                source = EncryptionKey.Source.valueOf(xmlSource.toUpperCase());
+            }
+            setPasswordKey(new EncryptionKey(xmlKey, source));
         }
     }
 
@@ -320,10 +499,13 @@ public class SolrCommitter extends AbstractMappedCommitter {
     public int hashCode() {
         return new HashCodeBuilder()
             .appendSuper(super.hashCode())
-            .append(solrServerFactory)
+            .append(solrClientType)
             .append(solrURL)
             .append(updateUrlParams)
             .append(solrCommitDisabled)
+            .append(username)
+            .append(password)
+            .append(passwordKey)
             .toHashCode();
     }
 
@@ -341,99 +523,27 @@ public class SolrCommitter extends AbstractMappedCommitter {
         SolrCommitter other = (SolrCommitter) obj;
         return new EqualsBuilder()
             .appendSuper(super.equals(obj))
-            .append(solrServerFactory, other.solrServerFactory)
+            .append(solrClientType, other.solrClientType)
             .append(solrURL, other.solrURL)
             .append(updateUrlParams, other.updateUrlParams)
             .append(solrCommitDisabled, other.solrCommitDisabled)
+            .append(username, other.username)
+            .append(password, other.password)
+            .append(passwordKey, other.passwordKey)
             .isEquals();
     }
     
     @Override
     public String toString() {
-        return "SolrCommitter [solrURL=" + solrURL + ", updateUrlParams="
-                + updateUrlParams + ", solrServerFactory=" + solrServerFactory
-                + ", solrCommitDisabled=" + solrCommitDisabled 
-                + ", " + super.toString() + "]";
-    }
-
-    //TODO make it a top-level interface?  Make it XMLConfigurable?
-    /**
-     * Factory for creating and initializing SolrServer instances.
-     */
-    public interface ISolrServerFactory extends Serializable {
-        /**
-         * Creates a new SolrServer.
-         * @param solrCommitter this instance
-         * @return a new SolrServer instance
-         */
-        SolrClient createSolrServer(SolrCommitter solrCommitter);
-    }
-    
-    static class DefaultSolrServerFactory implements ISolrServerFactory {
-        private static final long serialVersionUID = 5820720860417411567L;
-        private HttpSolrClient server;
-        @Override
-        public synchronized SolrClient createSolrServer(
-                SolrCommitter solrCommitter) {
-            if (server == null) {
-                if (StringUtils.isBlank(solrCommitter.getSolrURL())) {
-                    throw new CommitterException("Solr URL is undefined.");
-                }
-                
-                server = new CommitterSolrClient(solrCommitter.getSolrURL());
-                for (Entry<String, String> entry : 
-                        solrCommitter.updateUrlParams.entrySet()) {
-                    server.getInvariantParams().set(
-                            entry.getKey(), entry.getValue());
-                }
-            }
-            return server;
-        }
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = 1;
-            result = prime * result
-                    + ((server == null) ? 0 : server.hashCode());
-            return result;
-        }
-        @Override
-        public boolean equals(Object obj) {
-            if (this == obj) {
-                return true;
-            }
-            if (obj == null) {
-                return false;
-            }
-            if (getClass() != obj.getClass()) {
-                return false;
-            }
-            DefaultSolrServerFactory other = (DefaultSolrServerFactory) obj;
-            if (server == null) {
-                if (other.server != null) {
-                    return false;
-                }
-            } else if (!server.equals(other.server)) {
-                return false;
-            }
-            return true;
-        }
-        @Override
-        public String toString() {
-            return "DefaultSolrServerFactory [server=" + server + "]";
-        }
-    }
-
-    // This class is to fix the HttpSolrClient having a null invariantParams
-    // variable with no way to set it.
-    static class CommitterSolrClient extends HttpSolrClient {
-        private static final long serialVersionUID = 4152566496035344194L;
-        @SuppressWarnings("deprecation")
-        public CommitterSolrClient(String baseURL) {
-            // We have to use the straight constructor version even if 
-            // deprecated in order to initialise the invariantParams.
-            super(baseURL);
-            invariantParams = new ModifiableSolrParams();
-        }
+        return new ToStringBuilder(this)
+                .appendSuper(super.toString())
+                .append("solrClientType", solrClientType)
+                .append("solrURL", solrURL)
+                .append("updateUrlParams", updateUrlParams)
+                .append("solrCommitDisabled", solrCommitDisabled)
+                .append("username", username)
+                .append("password", "********")
+                .append("passwordKey", "********")
+                .toString();
     }
 }

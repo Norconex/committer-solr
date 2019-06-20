@@ -1,4 +1,4 @@
-/* Copyright 2010-2017 Norconex Inc.
+/* Copyright 2010-2019 Norconex Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,6 +14,8 @@
  */
 package com.norconex.committer.solr;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -21,10 +23,9 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.CharEncoding;
 import org.apache.commons.lang3.ClassUtils;
 import org.apache.log4j.Level;
-import org.apache.solr.client.solrj.SolrClient;
+import org.apache.solr.SolrTestCaseJ4;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.embedded.EmbeddedSolrServer;
 import org.apache.solr.client.solrj.response.QueryResponse;
@@ -32,7 +33,6 @@ import org.apache.solr.client.solrj.response.UpdateResponse;
 import org.apache.solr.common.SolrDocumentList;
 import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.common.params.ModifiableSolrParams;
-import org.apache.solr.util.AbstractSolrTestCase;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -40,7 +40,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import com.norconex.committer.solr.SolrCommitter.ISolrServerFactory;
 import com.norconex.commons.lang.config.XMLConfigurationUtil;
 import com.norconex.commons.lang.log.CountingConsoleAppender;
 import com.norconex.commons.lang.map.Properties;
@@ -50,8 +49,9 @@ import com.norconex.commons.lang.map.Properties;
  * Under Maven, the surefire plugin enables them by default.
  * 
  * @author Pascal Dimassimo
+ * @author Pascal Essiembre
  */
-public class SolrCommitterTest extends AbstractSolrTestCase {
+public class SolrCommitterTest extends SolrTestCaseJ4 {
 
     //TODO test update/delete URL params
     
@@ -77,19 +77,10 @@ public class SolrCommitterTest extends AbstractSolrTestCase {
         File solrHome = tempFolder.newFolder("solr");
         initCore("solrconfig.xml", "schema.xml", solrHome.toString());
         
-//        initCore("src/test/resources/solrconfig.xml",
-//                "src/test/resources/schema.xml", solrHome.toString());
-
         server = new EmbeddedSolrServer(
                 h.getCoreContainer(), h.getCore().getName());
         
-        committer = new SolrCommitter(new ISolrServerFactory() {
-            private static final long serialVersionUID = 4648990433469043210L;
-            @Override
-            public SolrClient createSolrServer(SolrCommitter solrCommitter) {
-                return server;
-            }
-        });
+        committer = new SolrCommitter(server);
         committer.setUpdateUrlParam("commitWithin", "1");
 
         queue = tempFolder.newFolder("queue");
@@ -106,7 +97,7 @@ public class SolrCommitterTest extends AbstractSolrTestCase {
     public void testCommitAdd() throws Exception {
 
         String content = "hello world!";
-        InputStream is = IOUtils.toInputStream(content, CharEncoding.UTF_8);
+        InputStream is = IOUtils.toInputStream(content, UTF_8);
         
         String id = "1";
         Properties metadata = new Properties();
@@ -145,10 +136,10 @@ public class SolrCommitterTest extends AbstractSolrTestCase {
     @Test
     public void testAddWithQueueContaining2documents() throws Exception{
         String content = "Document 1";
-        InputStream is = IOUtils.toInputStream(content, CharEncoding.UTF_8);
+        InputStream is = IOUtils.toInputStream(content, UTF_8);
         
         String content2 = "Document 2";
-        InputStream is2 = IOUtils.toInputStream(content2, CharEncoding.UTF_8);
+        InputStream is2 = IOUtils.toInputStream(content2, UTF_8);
         
         String id = "1";
         String id2 = "2";
@@ -178,7 +169,7 @@ public class SolrCommitterTest extends AbstractSolrTestCase {
         System.out.println("deleted " + worked.toString());
         String content1 = "Document 1";
         InputStream doc1Content = 
-                IOUtils.toInputStream(content1, CharEncoding.UTF_8);
+                IOUtils.toInputStream(content1, UTF_8);
         String id1 = "1";
         Properties doc1Metadata = new Properties();
         doc1Metadata.addString("id", id1);
@@ -186,14 +177,14 @@ public class SolrCommitterTest extends AbstractSolrTestCase {
         String content2 = "Document 2";
         String id2 = "2";
         InputStream doc2Content = 
-                IOUtils.toInputStream(content2, CharEncoding.UTF_8);
+                IOUtils.toInputStream(content2, UTF_8);
         Properties doc2Metadata = new Properties();
         doc2Metadata.addString("id", "2");
         
         String content3 = "Document 3";
         String id3 = "3";
         InputStream doc3Content = 
-                IOUtils.toInputStream(content3, CharEncoding.UTF_8);
+                IOUtils.toInputStream(content3, UTF_8);
         Properties doc3Metadata = new Properties();
         doc2Metadata.addString("id", "3");
         
@@ -229,7 +220,7 @@ public class SolrCommitterTest extends AbstractSolrTestCase {
         System.out.println("deleted " + worked.toString());
         String content = "Document 1";
         InputStream doc1Content = 
-                IOUtils.toInputStream(content, CharEncoding.UTF_8);
+                IOUtils.toInputStream(content, UTF_8);
         String id1 = "1";
         Properties doc1Metadata = new Properties();
         doc1Metadata.addString("id", id1);
@@ -237,14 +228,14 @@ public class SolrCommitterTest extends AbstractSolrTestCase {
         String content2 = "Document 2";
         String id2 = "2";
         InputStream doc2Content = 
-                IOUtils.toInputStream(content2, CharEncoding.UTF_8);
+                IOUtils.toInputStream(content2, UTF_8);
         Properties doc2Metadata = new Properties();
         doc2Metadata.addString("id", "2");
         
         String content3 = "Document 3";
         String id3 = "3";
         InputStream doc3Content = 
-                IOUtils.toInputStream(content3, CharEncoding.UTF_8);
+                IOUtils.toInputStream(content3, UTF_8);
         Properties doc3Metadata = new Properties();
         doc2Metadata.addString("id", "3");
         
@@ -332,8 +323,6 @@ public class SolrCommitterTest extends AbstractSolrTestCase {
         outCommitter.setSolrCommitDisabled(false);
         outCommitter.setUpdateUrlParam("uparam1", "uvalue1");
         outCommitter.setUpdateUrlParam("uparam2", "uvalue2");
-//        outCommitter.setDeleteUrlParam("dparam1", "dvalue1");
-//        outCommitter.setDeleteUrlParam("dparam2", "dvalue2");
         System.out.println("Writing/Reading this: " + outCommitter);
         XMLConfigurationUtil.assertWriteRead(outCommitter);
     }

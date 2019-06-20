@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- 
-   Copyright 2017 Norconex Inc.
+   Copyright 2017-2019 Norconex Inc.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@
       <xs:complexContent> 
         <xs:extension base="AbstractMappedCommitter">
           <xs:all>
+            <xs:element name="solrClientType" type="xs:string" minOccurs="0" maxOccurs="1" />
             <xs:element name="solrURL" type="nonEmptyString" minOccurs="1" maxOccurs="1" />
             <xs:element name="solrCommitDisabled" type="xs:boolean" minOccurs="0" maxOccurs="1" />
             <xs:element name="solrUpdateURLParams" minOccurs="0" maxOccurs="1">
@@ -31,6 +32,19 @@
                   <xs:element name="param" type="paramType" minOccurs="1" maxOccurs="unbounded"/>
                 </xs:all>
               </xs:complexType>
+            </xs:element>
+            <xs:element name="username" type="nonEmptyString" minOccurs="0" maxOccurs="1" />
+            <xs:element name="password" type="nonEmptyString" minOccurs="0" maxOccurs="1" />
+            <xs:element name="passwordKey" type="nonEmptyString" minOccurs="0" maxOccurs="1" />
+            <xs:element name="passwordKeySource" minOccurs="0" maxOccurs="1">
+              <xs:simpleType>
+                <xs:restriction base="xs:string">
+                  <xs:enumeration value="key"/>
+                  <xs:enumeration value="file"/>
+                  <xs:enumeration value="environment"/>
+                  <xs:enumeration value="property"/>
+                </xs:restriction>
+              </xs:simpleType>
             </xs:element>
           </xs:all>
         </xs:extension> 

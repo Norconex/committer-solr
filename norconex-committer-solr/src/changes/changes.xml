@@ -6,6 +6,23 @@
     <author email="info@norconex.com">Norconex Inc.</author>
   </properties>
   <body>
+
+    <release version="2.4.0-SNAPSHOT" date="2019-??-??" description="Feature release">
+      <action dev="essiembre" type="add" issue="17">
+        Added support for BASIC authentication to Solr.
+      </action>
+      <action dev="essiembre" type="add">
+        Added support for specifying SolrClient implementations to use
+        (e.g., HttpSolrClient, CloudSolrClient, ...).
+      </action>
+      <action dev="essiembre" type="update">
+        Maven dependency updates: Apache Solr 8.1.1, 
+        Norconex Commons Lang 1.15.0, Norconex Committer Core 2.1.2.
+      </action>
+      <action dev="essiembre" type="remove">
+        Removed deprecated methods.
+      </action>
+    </release>
   
     <release version="2.3.0" date="2017-04-25" description="Feature release">
       <action dev="essiembre" type="add">
