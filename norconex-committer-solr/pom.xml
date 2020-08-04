@@ -251,8 +251,8 @@
           <source>1.8</source>
           <detectLinks>false</detectLinks>
           <links>
-            <link>https://www.norconex.com/product/commons-lang/apidocs/</link>
-            <link>https://www.norconex.com/collectors/committer-core/latest/apidocs/</link>
+            <link>https://opensource.norconex.com/commons/lang/v1/apidocs/</link>
+            <link>https://opensource.norconex.com/committers/core/v2/apidocs/</link>
             <link>https://lucene.apache.org/solr/6_1_0/solr-core/</link>
             <link>https://lucene.apache.org/solr/6_1_0/solr-test-framework/</link>
             <link>https://commons.apache.org/proper/commons-configuration/javadocs/v1.10/apidocs/</link>
@@ -385,7 +385,7 @@
   <distributionManagement>
     <site>
       <id>norconex-site-deployment</id>
-      <url>${site.baseurl}/collectors/committer-solr/latest</url>
+      <url>${site.baseurl}/committers/solr/v2</url>
     </site>
     <snapshotRepository>
       <id>ossrh</id>
@@ -397,6 +397,7 @@
     </repository>    
   </distributionManagement>
 
+<!-- 
   <reporting>
     <plugins>
       <plugin>
@@ -426,7 +427,7 @@
           <header><![CDATA[
             <style>div.aboutLanguage .siteLink {font-size: 2em;}</style>
             <span class="siteLink">
-              <a target="_top" href="https://www.norconex.com/product/committer-solr">Norconex Solr Committer</a>
+              <a target="_top" href="https://opensource.norconex.com/committers/solr">Norconex Solr Committer</a>
             </span>
             ]]>
           </header>
@@ -452,8 +453,8 @@
           <source>1.8</source>
           <detectLinks>false</detectLinks>          
           <links>
-            <link>https://www.norconex.com/product/commons-lang/apidocs/</link>
-            <link>https://www.norconex.com/collectors/committer-core/latest/apidocs/</link>
+            <link>https://opensource.norconex.com/commons/lang/v1/apidocs/</link>
+            <link>https://opensource.norconex.com/committers/core/v2/apidocs/</link>
             <link>https://lucene.apache.org/solr/8_1_1/solr-core/</link>
             <link>https://lucene.apache.org/solr/8_1_1/solr-test-framework/</link>
             <link>https://commons.apache.org/proper/commons-configuration/javadocs/v1.10/apidocs/</link>
@@ -472,8 +473,9 @@
       </plugin>
     </plugins>
   </reporting>  
+ -->
 
-  <url>https://norconex.com/product/committer-solr/</url>
+  <url>https://opensource.norconex.com/committers/solr</url>
   <organization>
     <name>Norconex Inc.</name>
     <url>https://www.norconex.com</url>
