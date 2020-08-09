@@ -1,0 +1,7 @@
+- Support CloudSolrClient (which means adding params to update/delete
+  manually instead of relying on invariantParams only present on 
+  HttpSolrClient).
+
+- Add "allowCompression" and any other builder option?
+
+- Add ability to perform atomic updates.

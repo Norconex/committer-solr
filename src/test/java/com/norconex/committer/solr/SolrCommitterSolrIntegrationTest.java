@@ -1,0 +1,307 @@
+/* Copyright 2010-2020 Norconex Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.norconex.committer.solr;
+
+/**
+ * To run these tests under Eclipse, you have to enable JVM assertions (-ea).
+ * Under Maven, the surefire plugin enables them by default.
+ *
+ * @author Pascal Essiembre
+ */
+//@Ignore("This series of test is skipped because it needs an external Solr Server Running")
+public class SolrCommitterSolrIntegrationTest {//extends SolrTestCaseJ4 {
+
+//
+//
+//    //TODO test update/delete URL params
+//
+//    static {
+//        System.setProperty("solr.allow.unsafe.resourceloading", "true");
+//        ClassLoader loader =
+//                SolrCommitterSolrIntegrationTest.class.getClassLoader();
+//        loader.setPackageAssertionStatus("org.apache.solr", true);
+//        loader.setPackageAssertionStatus("org.apache.lucene", true);
+//    }
+//
+//
+//    @Rule
+//    public TemporaryFolder tempFolder = new TemporaryFolder();
+//
+//    private SolrClient solrClient = new HttpSolrClient.Builder(
+//            "http://localhost:8983/solr/collection1/").build();
+//
+//    private SolrCommitter committer;
+//
+//    private File queue;
+//
+//    @Before
+//    public void setup() throws Exception  {
+//        File solrHome = tempFolder.newFolder("solr");
+//        initCore("solrconfig.xml", "schema.xml", solrHome.toString());
+//
+//        committer = new SolrCommitter(solrClient);
+//        committer.setUpdateUrlParam("commitWithin", "1");
+//
+//        queue = tempFolder.newFolder("queue");
+//        committer.setQueueDir(queue.toString());
+//        solrClient.deleteByQuery("*:*");
+//        solrClient.commit();
+//    }
+//
+//
+//    @After
+//    public void teardown() throws SolrServerException, IOException {
+//        deleteCore();
+//        solrClient.deleteByQuery("*:*");
+//        solrClient.commit();
+//    }
+//
+//    @Test
+//    public void testCommitAdd() throws Exception {
+//
+//        String content = "hello world!";
+//        InputStream is = IOUtils.toInputStream(content, UTF_8);
+//
+//        String id = "1";
+//        Properties metadata = new Properties();
+//        metadata.addString("id", id);
+//
+//
+//        // Add new doc to Solr
+//        committer.add(id, is, metadata);
+//
+//        committer.commit();
+//
+//        IOUtils.closeQuietly(is);
+//
+//        // Check that it's in Solr
+//        SolrDocumentList results = queryId(id);
+//        assertEquals(1, results.getNumFound());
+//    }
+//
+//    public void testSolrJWith3AddCommandAnd1DeleteCommand() throws Exception{
+//        SolrInputDocument doc1 = new SolrInputDocument();
+//        SolrInputDocument doc2 = new SolrInputDocument();
+//        SolrInputDocument doc3 = new SolrInputDocument();
+//        doc1.addField("id", "1");
+//        doc2.addField("id","2");
+//        doc3.addField("id", "3");
+//        solrClient.add(doc1);
+//        solrClient.add(doc2);
+//        solrClient.deleteById("1");
+//        solrClient.add(doc3);
+//        solrClient.commit();
+//        SolrDocumentList results = getAllDocs();
+//        assertEquals(2, results.getNumFound());
+//
+//    }
+//
+//    @Test
+//    public void testAddWithQueueContaining2documents() throws Exception{
+//        String content = "Document 1";
+//        InputStream is = IOUtils.toInputStream(content, UTF_8);
+//
+//        String content2 = "Document 2";
+//        InputStream is2 = IOUtils.toInputStream(content2, UTF_8);
+//
+//        String id = "1";
+//        String id2 = "2";
+//
+//        Properties metadata = new Properties();
+//        metadata.addString("id", id);
+//
+//        Properties metadata2 = new Properties();
+//        metadata.addString("id", id2);
+//
+//        committer.add(id, is, metadata);
+//        committer.add(id2, is2, metadata2);
+//        committer.commit();
+//        IOUtils.closeQuietly(is);
+//
+//        //Check that there is 2 documents in Solr
+//        SolrDocumentList results = getAllDocs();
+//        assertEquals(2, results.getNumFound());
+//    }
+//
+//    @Test
+//    public void testCommitQueueWith3AddCommandAnd1DeleteCommand()
+//            throws Exception{
+//        UpdateResponse worked = solrClient.deleteByQuery("*:*");
+//        committer.commit();
+//
+//        System.out.println("deleted " + worked.toString());
+//        String content1 = "Document 1";
+//        InputStream doc1Content =
+//                IOUtils.toInputStream(content1, UTF_8);
+//        String id1 = "1";
+//        Properties doc1Metadata = new Properties();
+//        doc1Metadata.addString("id", id1);
+//
+//        String content2 = "Document 2";
+//        String id2 = "2";
+//        InputStream doc2Content =
+//                IOUtils.toInputStream(content2, UTF_8);
+//        Properties doc2Metadata = new Properties();
+//        doc2Metadata.addString("id", "2");
+//
+//        String content3 = "Document 3";
+//        String id3 = "3";
+//        InputStream doc3Content =
+//                IOUtils.toInputStream(content3, UTF_8);
+//        Properties doc3Metadata = new Properties();
+//        doc2Metadata.addString("id", "3");
+//
+//        committer.add(id1, doc1Content, doc1Metadata);
+//        committer.add(id2 , doc2Content , doc2Metadata);
+//
+//        //TODO hacking this part of the test until a more solid fix is found in
+//        //SolrCommitter
+//        committer.commit();
+//
+//        committer.remove(id1, doc1Metadata);
+//        committer.add(id3, doc3Content, doc3Metadata);
+//
+//        committer.commit();
+//
+//        IOUtils.closeQuietly(doc1Content);
+//        IOUtils.closeQuietly(doc2Content);
+//        IOUtils.closeQuietly(doc3Content);
+//
+//        //Check that there is 2 documents in Solr
+//        SolrDocumentList results = getAllDocs();
+//        System.out.println("results " + results.toString());
+//        assertEquals(2, results.getNumFound());
+//        System.out.println("Writing/Reading this => " + committer);
+//    }
+//
+//    @Test
+//    public void testCommitQueueWith3AddCommandAnd2DeleteCommand()
+//            throws Exception{
+//
+//        UpdateResponse worked = solrClient.deleteByQuery("*:*");
+//        committer.commit();
+//        System.out.println("deleted " + worked.toString());
+//        String content = "Document 1";
+//        InputStream doc1Content =
+//                IOUtils.toInputStream(content, UTF_8);
+//        String id1 = "1";
+//        Properties doc1Metadata = new Properties();
+//        doc1Metadata.addString("id", id1);
+//
+//        String content2 = "Document 2";
+//        String id2 = "2";
+//        InputStream doc2Content =
+//                IOUtils.toInputStream(content2, UTF_8);
+//        Properties doc2Metadata = new Properties();
+//        doc2Metadata.addString("id", "2");
+//
+//        String content3 = "Document 3";
+//        String id3 = "3";
+//        InputStream doc3Content =
+//                IOUtils.toInputStream(content3, UTF_8);
+//        Properties doc3Metadata = new Properties();
+//        doc2Metadata.addString("id", "3");
+//
+//        committer.add(id1, doc1Content, doc1Metadata);
+//        committer.add(id2 , doc2Content , doc2Metadata);
+//
+//        //TODO hacking this part of the test until a more solid fix is found in
+//        //SolrCommitter
+//        committer.commit();
+//
+//        committer.remove(id1, doc1Metadata);
+//        committer.remove(id2, doc1Metadata);
+//        committer.add(id3, doc3Content, doc3Metadata);
+//        committer.commit();
+//
+//        IOUtils.closeQuietly(doc1Content);
+//        IOUtils.closeQuietly(doc2Content);
+//        IOUtils.closeQuietly(doc3Content);
+//
+//        //Check that there is 2 documents in Solr
+//        SolrDocumentList results = getAllDocs();
+//        System.out.println("results " + results.toString());
+//        assertEquals(1, results.getNumFound());
+//        System.out.println("Writing/Reading this => " + committer);
+//    }
+//
+//    @Test
+//    public void testCommitDelete() throws Exception {
+//
+//        // Add a document directly to Solr
+//        SolrInputDocument doc = new SolrInputDocument();
+//        String id = "1";
+//        doc.addField(SolrCommitter.DEFAULT_SOLR_ID_FIELD, id);
+//        String content = "hello world!";
+//        doc.addField(SolrCommitter.DEFAULT_SOLR_CONTENT_FIELD, content);
+//
+//        solrClient.add(doc);
+//        solrClient.commit();
+//
+//        // Queue it to be deleted
+//        Properties metadata = new Properties();
+//        metadata.addString("id", id);
+//        committer.remove(id, metadata);
+//
+//        committer.commit();
+//
+//        // Check that it's remove from Solr
+//        SolrDocumentList results = queryId(id);
+//        assertEquals(0, results.getNumFound());
+//    }
+//
+//    private SolrDocumentList queryId(String id)
+//            throws SolrServerException, IOException {
+//        ModifiableSolrParams solrParams = new ModifiableSolrParams();
+//        solrParams.set("q", String.format("%s:%s",
+//                SolrCommitter.DEFAULT_SOLR_ID_FIELD, id));
+//        QueryResponse response = solrClient.query(solrParams);
+//        SolrDocumentList results = response.getResults();
+//        return results;
+//    }
+//
+//    private SolrDocumentList getAllDocs()
+//            throws SolrServerException, IOException{
+//        ModifiableSolrParams solrParams = new ModifiableSolrParams();
+//          solrParams.set("q", "*:*");
+//        QueryResponse response = solrClient.query(solrParams);
+//        SolrDocumentList results = response.getResults();
+//        return results;
+//    }
+//
+//
+//    @Test
+//    public void testWriteRead() throws IOException {
+//        SolrCommitter outCommitter = new SolrCommitter();
+//        outCommitter.setQueueDir("C:\\FakeTestDirectory\\");
+//        outCommitter.setSourceContentField("sourceContentField");
+//        outCommitter.setTargetContentField("targetContentField");
+//        outCommitter.setSourceReferenceField("idTargetField");
+//        outCommitter.setTargetReferenceField("idTargetField");
+//        outCommitter.setKeepSourceContentField(true);
+//        outCommitter.setKeepSourceReferenceField(false);
+//        outCommitter.setQueueSize(100);
+//        outCommitter.setCommitBatchSize(50);
+//        outCommitter.setSolrURL("http://solrurl.com/test");
+//        outCommitter.setSolrCommitDisabled(false);
+//        outCommitter.setUpdateUrlParam("uparam1", "uvalue1");
+//        outCommitter.setUpdateUrlParam("uparam2", "uvalue2");
+////        outCommitter.setDeleteUrlParam("dparam1", "dvalue1");
+////        outCommitter.setDeleteUrlParam("dparam2", "dvalue2");
+//        System.out.println("Writing/Reading this: " + outCommitter);
+//        XMLConfigurationUtil.assertWriteRead(outCommitter);
+//    }
+//
+}
