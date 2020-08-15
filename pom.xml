@@ -111,6 +111,17 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
+        <configuration>
+          <!-- We are referencing docu from other libs with @nx.include so
+               we need to include such dependencies here. -->
+          <tagletArtifacts combine.children="append">
+            <tagletArtifact>
+              <groupId>com.norconex.collectors</groupId>
+              <artifactId>norconex-committer-core</artifactId>
+              <version>${norconex-committer-core.version}</version>
+            </tagletArtifact>
+          </tagletArtifacts>
+        </configuration>
       </plugin>
 
       <plugin>

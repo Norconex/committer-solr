@@ -10,4 +10,5 @@
 
     <fieldType name="string"  class="solr.StrField" sortMissingLast="true" docValues="true" />
     <fieldType name="strings" class="solr.StrField" sortMissingLast="true" multiValued="true" docValues="true" />
+    <fieldType name="plong"   class="solr.LongPointField" docValues="true"/>
 </schema>

@@ -20,6 +20,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 
 import org.apache.commons.lang3.ObjectUtils;
@@ -33,11 +34,14 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.request.UpdateRequest;
+import org.apache.solr.client.solrj.response.UpdateResponse;
 import org.apache.solr.common.SolrInputDocument;
+import org.apache.solr.common.util.NamedList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.norconex.committer.core3.CommitterException;
+import com.norconex.committer.core3.CommitterUtil;
 import com.norconex.committer.core3.DeleteRequest;
 import com.norconex.committer.core3.ICommitterRequest;
 import com.norconex.committer.core3.UpsertRequest;
@@ -89,11 +93,15 @@ import com.norconex.commons.lang.xml.XML;
  *
  * <h3>Authentication</h3>
  * <p>
- * BASIC authentication is supported for password-protected
+ * Basic authentication is supported for password-protected
  * Solr installations.
  * </p>
  *
  * {@nx.include com.norconex.commons.lang.security.Credentials#doc}
+ *
+ * {@nx.include com.norconex.committer.core3.AbstractCommitter#restrictTo}
+ *
+ * {@nx.include com.norconex.committer.core3.AbstractCommitter#fieldMappings}
  *
  * {@nx.xml.usage
  * <committer class="com.norconex.committer.solr.SolrCommitter">
@@ -103,7 +111,7 @@ import com.norconex.commons.lang.xml.XML;
  *   <solrURL>(URL to Solr)</solrURL>
  *   <solrUpdateURLParams>
  *     <param name="(parameter name)">(parameter value)</param>
- *     <-- multiple param tags allowed -->
+ *     <!-- multiple param tags allowed -->
  *   </solrUpdateURLParams>
  *   <solrCommitDisabled>[false|true]</solrCommitDisabled>
  *
@@ -112,42 +120,25 @@ import com.norconex.commons.lang.xml.XML;
  *     {@nx.include com.norconex.commons.lang.security.Credentials@nx.xml.usage}
  *   </credentials>
  *
- *   <sourceReferenceField keep="[false|true]">
- *     (Optional name of field that contains the document reference, when
- *     the default document reference is not used.  The reference value
- *     will be mapped to Solr "id" field, or the "targetReferenceField"
- *     specified.
- *     Once re-mapped, this metadata source field is
- *     deleted, unless "keep" is set to true.)
- *   </sourceReferenceField>
- *   <targetReferenceField>
- *     (Name of Solr target field where the store a document unique
- *     identifier (idSourceField).  If not specified, default is "id".)
- *   </targetReferenceField>
- *   <sourceContentField keep="[false|true]">
- *     (If you wish to use a metadata field to act as the document
- *     "content", you can specify that field here.  Default
- *     does not take a metadata field but rather the document content.
- *     Once re-mapped, the metadata source field is deleted,
- *     unless "keep" is set to true.)
- *   </sourceContentField>
+ *   <sourceIdField>
+ *     (Optional document field name containing the value that will be stored
+ *     in Solr target ID field. Default is the document reference.)
+ *   </sourceIdField>
+ *   <targetIdField>
+ *     (Optional name of Solr field where to store a document unique
+ *     identifier (sourceIdField).  If not specified, default is "id".)
+ *   </targetIdField>
  *   <targetContentField>
- *     (Solr target field name for a document content/body.
- *     Default is: content)
+ *     (Optional Solr field name to store document content/body.
+ *     Default is "content".)
  *   </targetContentField>
- *   <commitBatchSize>
- *     (Maximum number of docs to send Solr at once. Will issue a Solr
- *     commit unless "solrCommitDisabled" is true)
- *   </commitBatchSize>
- *   <queueDir>(optional path where to queue files)</queueDir>
- *   <queueSize>(max queue size before sending to Solr)</queueSize>
- *   <maxRetries>(max retries upon commit failures)</maxRetries>
- *   <maxRetryWait>(max delay in milliseconds between retries)</maxRetryWait>
+ *
+ *   {@nx.include com.norconex.committer.core3.batch.AbstractBatchCommitter#options}
  * </committer>
  * }
  *
  * <p>
- * As of 2.2.1, XML configuration entries expecting millisecond durations
+ * XML configuration entries expecting millisecond durations
  * can be provided in human-readable format (English only), as per
  * {@link DurationParser} (e.g., "5 minutes and 30 seconds" or "5m30s").
  * </p>
@@ -170,6 +161,10 @@ public class SolrCommitter extends AbstractBatchCommitter {
     private boolean solrCommitDisabled;
     private final Map<String, String> updateUrlParams = new HashMap<>();
     private final Credentials credentials = new Credentials();
+
+    private String sourceIdField;
+    private String targetIdField = DEFAULT_SOLR_ID_FIELD;
+    private String targetContentField = DEFAULT_SOLR_CONTENT_FIELD;
 
     @ToStringExclude
     @HashCodeExclude
@@ -270,6 +265,60 @@ public class SolrCommitter extends AbstractBatchCommitter {
         this.credentials.copyFrom(credentials);
     }
 
+    /**
+     * Gets the name of the Solr field where content will be stored. Default
+     * is "content".
+     * @return field name
+     */
+    public String getTargetContentField() {
+        return targetContentField;
+    }
+    /**
+     * Sets the name of the Solr field where content will be stored.
+     * Specifying a <code>null</code> value will disable storing the content.
+     * @param targetContentField field name
+     */
+    public void setTargetContentField(String targetContentField) {
+        this.targetContentField = targetContentField;
+    }
+
+    /**
+     * Gets the document field name containing the value to be stored
+     * in Solr ID field. Default is not a field, but rather
+     * the document reference.
+     * @return name of field containing id value
+     */
+    public String getSourceIdField() {
+        return sourceIdField;
+    }
+    /**
+     * Sets the document field name containing the value to be stored
+     * in Solr ID field. Set <code>null</code> to use the
+     * document reference instead of a field (default).
+     * @param sourceIdField name of field containing id value,
+     *        or <code>null</code>
+     */
+    public void setSourceIdField(String sourceIdField) {
+        this.sourceIdField = sourceIdField;
+    }
+
+    /**
+     * Gets the name of the Solr field where to store a document unique
+     * identifier (sourceIdField).  Default is "id".
+     * @return name of Solr ID field
+     */
+    public String getTargetIdField() {
+        return targetIdField;
+    }
+    /**
+     * Sets the name of the Solr field where to store a document unique
+     * identifier (sourceIdField).  If not specified, default is "id".
+     * @param targetIdField name of Solr ID field
+     */
+    public void setTargetIdField(String targetIdField) {
+        this.targetIdField = targetIdField;
+    }
+
     @Override
     protected void initBatchCommitter() throws CommitterException {
         solrClient = ObjectUtils.defaultIfNull(solrClientType,
@@ -284,7 +333,7 @@ public class SolrCommitter extends AbstractBatchCommitter {
         // risk of the delete being a no-op since added documents are
         // not visible until committed (thus nothing to delete).
 
-        //TODO before a delete, check if the same reference was previously
+        //MAYBE: before a delete, check if the same reference was previously
         //added before forcing a commit if any additions occurred.
 
         int docCount = 0;
@@ -323,10 +372,11 @@ public class SolrCommitter extends AbstractBatchCommitter {
     protected void closeBatchCommitter() throws CommitterException {
         IOUtil.closeQuietly(solrClient);
         solrClient = null;
+        LOG.info("SolrClient closed.");
     }
 
     protected void pushSolrRequest(UpdateRequest solrBatchRequest)
-            throws SolrServerException, IOException {
+            throws SolrServerException, IOException, CommitterException {
 
         if (credentials.isSet()) {
             solrBatchRequest.setBasicAuthCredentials(
@@ -337,19 +387,26 @@ public class SolrCommitter extends AbstractBatchCommitter {
             solrBatchRequest.setParam(entry.getKey(), entry.getValue());
         }
 
-        solrClient.request(solrBatchRequest);
+        handleResponse(solrClient.request(solrBatchRequest));
         if (!isSolrCommitDisabled()) {
-            solrClient.commit();
+            handleResponse(solrClient.commit());
         }
         solrBatchRequest.clear();
     }
 
     protected void addSolrUpsertRequest(
-            UpdateRequest solrBatchRequest, UpsertRequest committerRequest) {
+            UpdateRequest solrBatchRequest, UpsertRequest committerRequest)
+                    throws CommitterException {
+
+        CommitterUtil.applyTargetId(
+                committerRequest, sourceIdField, targetIdField);
+        CommitterUtil.applyTargetContent(committerRequest, targetContentField);
         solrBatchRequest.add(buildSolrDocument(committerRequest.getMetadata()));
     }
     protected void addSolrDeleteRequest(
             UpdateRequest solrBatchRequest, DeleteRequest committerRequest) {
+        CommitterUtil.applyTargetId(
+                committerRequest, sourceIdField, targetIdField);
         solrBatchRequest.deleteById(committerRequest.getReference());
     }
     protected SolrInputDocument buildSolrDocument(Properties fields) {
@@ -361,6 +418,27 @@ public class SolrCommitter extends AbstractBatchCommitter {
             }
         }
         return doc;
+    }
+
+    private void handleResponse(UpdateResponse response)
+            throws CommitterException {
+        handleResponse(response.getResponse());
+    }
+    private void handleResponse(NamedList<Object> response)
+            throws CommitterException {
+        @SuppressWarnings("unchecked")
+        NamedList<Object> headers =
+                (NamedList<Object>) response.get("responseHeader");
+        if (headers == null) {
+            throw new CommitterException(
+                    "No response headers obtained from Solr request. "
+                  + "Response: " + response);
+        }
+        String status = Objects.toString(headers.get("status"), null);
+        if (!"0".equals(status)) {
+            throw new CommitterException(
+                    "Invalid Solr response status: " + status);
+        }
     }
 
     @Override
@@ -379,6 +457,11 @@ public class SolrCommitter extends AbstractBatchCommitter {
         }
 
         credentials.loadFromXML(xml.getXML("credentials"));
+
+        setSourceIdField(xml.getString("sourceIdField", getSourceIdField()));
+        setTargetIdField(xml.getString("targetIdField", getTargetIdField()));
+        setTargetContentField(xml.getString(
+                "targetContentField", getTargetContentField()));
     }
 
     @Override
@@ -395,6 +478,9 @@ public class SolrCommitter extends AbstractBatchCommitter {
 
         xml.addElement("solrCommitDisabled", isSolrCommitDisabled());
         credentials.saveToXML(xml.addElement("credentials"));
+        xml.addElement("sourceIdField", getSourceIdField());
+        xml.addElement("targetIdField", getTargetIdField());
+        xml.addElement("targetContentField", getTargetContentField());
     }
 
     @Override

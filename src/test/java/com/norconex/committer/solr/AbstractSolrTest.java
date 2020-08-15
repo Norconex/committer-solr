@@ -59,13 +59,9 @@ public abstract class AbstractSolrTest {
                 new File(solrHome, "solr-test.log").getAbsolutePath());
 
 
-        FileUtils.moveDirectory(
+        FileUtils.copyDirectory(
                 new File("./src/test/resources/solr-server"),
                 solrHome);
-                //new File(solrHome);
-//        classpathFileToHome("core.properties", "test");
-//        classpathFileToHome("schema.xml");
-//        classpathFileToHome("solrconfig.xml");
 
         this.solrServer = new JettySolrRunner(
                 solrHome.getAbsolutePath(), "/solr", 0);
@@ -97,9 +93,7 @@ public abstract class AbstractSolrTest {
         solrClient.deleteByQuery("*:*");
         solrClient.commit();
     }
-//    @AfterEach
-//    private void afterEach() throws SolrServerException, IOException {
-//    }
+
     @AfterAll
     private void afterAll() throws Exception {
         LOG.info("Stopping Solr.");
@@ -137,7 +131,7 @@ public abstract class AbstractSolrTest {
         return solrClient;
     }
 
-    public SolrCommitter createSolrCommitter() throws CommitterException {
+    protected SolrCommitter createSolrCommitter() throws CommitterException {
         CommitterContext ctx = CommitterContext.build()
                 .setWorkDir(new File(getSolrHome(),
                         "" + TimeIdGenerator.next()).toPath())
@@ -149,20 +143,21 @@ public abstract class AbstractSolrTest {
         return committer;
     }
 
-//    public SolrClient newSolrClient() {
-//        if (solrServer == null) {
-//            throw new IllegalStateException(
-//                    "Cannot create Solr client. Solr Server is not running.");
-//        }
-//        // solrServer.newClient() does not work for some reason, host is null
-//        return new HttpSolrClient.Builder(
-//               "http://localhost:" + getSolrPort() + "/solr/test").build();
-//    }
+    protected void withinCommitterSession(CommitterConsumer c)
+            throws CommitterException {
+        SolrCommitter committer = createSolrCommitter();
+        try {
+            c.accept(committer);
+        } catch (CommitterException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new CommitterException(e);
+        }
+        committer.close();
+    }
 
-    private void classpathFileToHome(String file)
-            throws IOException {
-        FileUtils.copyInputStreamToFile(
-                getClass().getResourceAsStream("/" + file),
-                new File(solrHome, file));
+    @FunctionalInterface
+    protected interface CommitterConsumer {
+        void accept(SolrCommitter c) throws Exception;
     }
 }

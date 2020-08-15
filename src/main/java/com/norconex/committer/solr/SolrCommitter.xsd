@@ -35,6 +35,9 @@
               </xs:complexType>
             </xs:element>
             <xs:element ref="credentials" minOccurs="0" maxOccurs="1"/>
+            <xs:element name="sourceIdField" type="xs:string" minOccurs="0" maxOccurs="1" />
+            <xs:element name="targetIdField" type="xs:string" minOccurs="0" maxOccurs="1" />
+            <xs:element name="targetContentField" type="xs:string" minOccurs="0" maxOccurs="1" />
           </xs:all>
         </xs:extension> 
       </xs:complexContent>

@@ -2,13 +2,18 @@
 <config>
   <luceneMatchVersion>8.6.0</luceneMatchVersion>
   <schemaFactory class="ClassicIndexSchemaFactory"/>
-  
+
+<!-- 
   <directoryFactory name="DirectoryFactory" class="solr.RAMDirectoryFactory"/>
+  <lockType>single</lockType>
+ -->  
+
+  
+  
   <!--
   <dataDir>${solr.data.dir:}</dataDir>
   <directoryFactory name="DirectoryFactory"
                     class="${solr.directoryFactory:solr.NRTCachingDirectoryFactory}"/>
-   -->
   <updateHandler class="solr.DirectUpdateHandler2">
     <autoSoftCommit>
         <maxDocs>1</maxDocs>
@@ -20,6 +25,7 @@
       <openSearcher>false</openSearcher>
     </autoCommit>
   </updateHandler>
+   -->
   
   <requestHandler name="/select" class="solr.SearchHandler">
     <lst name="defaults">
