@@ -456,7 +456,7 @@ public class SolrCommitter extends AbstractBatchCommitter {
                     p.getString("@name"), p.getString(".")));
         }
 
-        credentials.loadFromXML(xml.getXML("credentials"));
+        xml.ifXML("credentials", x -> x.populate(credentials));
 
         setSourceIdField(xml.getString("sourceIdField", getSourceIdField()));
         setTargetIdField(xml.getString("targetIdField", getTargetIdField()));
