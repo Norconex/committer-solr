@@ -132,10 +132,10 @@ public abstract class AbstractSolrTest {
     }
 
     protected SolrCommitter createSolrCommitter() throws CommitterException {
-        CommitterContext ctx = CommitterContext.build()
+        CommitterContext ctx = CommitterContext.builder()
                 .setWorkDir(new File(getSolrHome(),
                         "" + TimeIdGenerator.next()).toPath())
-                .create();
+                .build();
         SolrCommitter committer = new SolrCommitter();
         committer.setSolrURL(getSolrTestURL());
         committer.setUpdateUrlParam("commitWithin", "1");
