@@ -32,7 +32,7 @@
   </description>
   
   <properties>
-    <solr.version>8.6.0</solr.version>
+    <solr.version>8.8.2</solr.version>
   </properties>
   <inceptionYear>2009</inceptionYear>
 
