@@ -7,6 +7,17 @@
   </properties>
   <body>
 
+    <release version="3.0.0-SNAPSHOT" date="2021-??-??" 
+        description="Next major release (since latest milestone)">
+      <action dev="essiembre" type="fix" issue="21">
+        Fixed Solr credentials not being sent when "solrCommitDisabled" is 
+        false.
+      </action>
+      <action dev="essiembre" type="update">
+        Maven dependency updates: Solr 8.8.2.
+      </action>      
+    </release>
+
     <release version="3.0.0-M1" date="2021-03-01" 
         description="Milestone towards next major release.">
       <action dev="essiembre" type="update">

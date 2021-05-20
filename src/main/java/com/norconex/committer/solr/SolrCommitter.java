@@ -387,9 +387,9 @@ public class SolrCommitter extends AbstractBatchCommitter {
             solrBatchRequest.setParam(entry.getKey(), entry.getValue());
         }
 
-        handleResponse(solrClient.request(solrBatchRequest));
+        handleResponse(solrBatchRequest.process(solrClient));
         if (!isSolrCommitDisabled()) {
-            handleResponse(solrClient.commit());
+            handleResponse(solrBatchRequest.commit(solrClient, null));
         }
         solrBatchRequest.clear();
     }
