@@ -7,6 +7,13 @@
   </properties>
   <body>
 
+    <release version="2.4.1-SNAPSHOT" date="????-??-??" description="Bugfix release">
+      <action dev="essiembre" type="fix" issue="21">
+        Fixed Solr credentials not being sent when "solrCommitDisabled" is 
+        false.
+      </action>
+    </release>
+
     <release version="2.4.0" date="2019-12-22" description="Feature release">
       <action dev="essiembre" type="add" issue="17">
         Added support for BASIC authentication to Solr.

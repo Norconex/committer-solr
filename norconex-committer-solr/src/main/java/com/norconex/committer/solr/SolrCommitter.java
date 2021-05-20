@@ -14,6 +14,7 @@
  */
 package com.norconex.committer.solr;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +34,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.apache.solr.client.solrj.SolrClient;
+import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.request.UpdateRequest;
 import org.apache.solr.common.SolrInputDocument;
 
@@ -51,19 +53,19 @@ import com.norconex.commons.lang.xml.EnhancedXMLStreamWriter;
  * <p>
  * Commits documents to Apache Solr.
  * </p>
- * 
+ *
  * <h3>Solr Client:</h3>
  * <p>
- * As of 2.4.0, it is possible to specify which type of 
+ * As of 2.4.0, it is possible to specify which type of
  * <a href="https://lucene.apache.org/solr/guide/8_1/using-solrj.html#types-of-solrclients">
  * Solr Client</a> to use.
  * The expected configuration value of "solrURL" is influenced
- * by the client type chosen.  Default client type is 
+ * by the client type chosen.  Default client type is
  * <code>HttpSolrClient</code>. The clients are:
  * </p>
  * <dl>
  *   <dt>HttpSolrClient</dt>
- *     <dd>For direct access to a single Solr node. Ideal for 
+ *     <dd>For direct access to a single Solr node. Ideal for
  *         local development. Needs a Solr URL. Default client.</dd>
  *   <dt>LBHttpSolrClient</dt>
  *     <dd>Simple load-balancing as an alternative to an external load balancer.
@@ -72,7 +74,7 @@ import com.norconex.commons.lang.xml.EnhancedXMLStreamWriter;
  *     <dd>Optimized for mass upload on a single node.  Not best for queries.
  *         Needs a Solr URL.</dd>
  *   <dt>CloudSolrClient</dt>
- *     <dd>For use with a SolrCloud cluster. Needs a comma-separated list 
+ *     <dd>For use with a SolrCloud cluster. Needs a comma-separated list
  *         of Zookeeper hosts.</dd>
  *   <dt>Http2SolrClient</dt>
  *     <dd>Same as HttpSolrClient but for HTTP/2 support. Marked as
@@ -84,10 +86,10 @@ import com.norconex.commons.lang.xml.EnhancedXMLStreamWriter;
  *     <dd>Same as LBHttpSolrClient but for HTTP/2 support. Marked as
  *         experimental by Apache.</dd>
  * </dl>
- * 
+ *
  * <h3>Authentication</h3>
  * <p>
- * Since 2.4.0, BASIC authentication is supported for password-protected 
+ * Since 2.4.0, BASIC authentication is supported for password-protected
  * Solr installations.
  * The <code>password</code> can optionally be
  * encrypted using {@link EncryptionUtil} (or command-line "encrypt.bat"
@@ -121,15 +123,15 @@ import com.norconex.commons.lang.xml.EnhancedXMLStreamWriter;
  *     <td>Name of a JVM system property containing the key.</td>
  *   </tr>
  * </table>
- *  
+ *
  * <p>
  * As of 2.2.1, XML configuration entries expecting millisecond durations
- * can be provided in human-readable format (English only), as per 
+ * can be provided in human-readable format (English only), as per
  * {@link DurationParser} (e.g., "5 minutes and 30 seconds" or "5m30s").
  * </p>
- * 
+ *
  * <h3>XML configuration usage:</h3>
- * 
+ *
  * <pre>
  *  &lt;committer class="com.norconex.committer.solr.SolrCommitter"&gt;
  *      &lt;solrClientType&gt;
@@ -141,29 +143,29 @@ import com.norconex.commons.lang.xml.EnhancedXMLStreamWriter;
  *         &lt;-- multiple param tags allowed --&gt;
  *      &lt;/solrUpdateURLParams&gt;
  *      &lt;solrCommitDisabled&gt;[false|true]&lt;/solrCommitDisabled&gt;
- *      
+ *
  *      &lt;!-- Use the following if BASIC authentication is required. --&gt;
  *      &lt;username&gt;(Optional user name)&lt;/username&gt;
  *      &lt;password&gt;(Optional user password)&lt;/password&gt;
  *      &lt;!-- Use the following if password is encrypted. --&gt;
  *      &lt;passwordKey&gt;(the encryption key or a reference to it)&lt;/passwordKey&gt;
  *      &lt;passwordKeySource&gt;[key|file|environment|property]&lt;/passwordKeySource&gt;
- *      
+ *
  *      &lt;sourceReferenceField keep="[false|true]"&gt;
- *         (Optional name of field that contains the document reference, when 
+ *         (Optional name of field that contains the document reference, when
  *         the default document reference is not used.  The reference value
- *         will be mapped to Solr "id" field, or the "targetReferenceField" 
+ *         will be mapped to Solr "id" field, or the "targetReferenceField"
  *         specified.
- *         Once re-mapped, this metadata source field is 
+ *         Once re-mapped, this metadata source field is
  *         deleted, unless "keep" is set to <code>true</code>.)
  *      &lt;/sourceReferenceField&gt;
  *      &lt;targetReferenceField&gt;
- *         (Name of Solr target field where the store a document unique 
- *         identifier (idSourceField).  If not specified, default is "id".) 
+ *         (Name of Solr target field where the store a document unique
+ *         identifier (idSourceField).  If not specified, default is "id".)
  *      &lt;/targetReferenceField&gt;
  *      &lt;sourceContentField keep="[false|true]"&gt;
- *         (If you wish to use a metadata field to act as the document 
- *         "content", you can specify that field here.  Default 
+ *         (If you wish to use a metadata field to act as the document
+ *         "content", you can specify that field here.  Default
  *         does not take a metadata field but rather the document content.
  *         Once re-mapped, the metadata source field is deleted,
  *         unless "keep" is set to <code>true</code>.)
@@ -173,7 +175,7 @@ import com.norconex.commons.lang.xml.EnhancedXMLStreamWriter;
  *          Default is: content)
  *      &lt;/targetContentField&gt;
  *      &lt;commitBatchSize&gt;
- *         (Maximum number of docs to send Solr at once. Will issue a Solr 
+ *         (Maximum number of docs to send Solr at once. Will issue a Solr
  *          commit unless "solrCommitDisabled" is true)
  *      &lt;/commitBatchSize&gt;
  *      &lt;queueDir&gt;(optional path where to queue files)&lt;/queueDir&gt;
@@ -182,7 +184,7 @@ import com.norconex.commons.lang.xml.EnhancedXMLStreamWriter;
  *      &lt;maxRetryWait&gt;(max delay in milliseconds between retries)&lt;/maxRetryWait&gt;
  *  &lt;/committer&gt;
  * </pre>
- * 
+ *
  * @author Pascal Essiembre
  */
 public class SolrCommitter extends AbstractMappedCommitter {
@@ -195,16 +197,16 @@ public class SolrCommitter extends AbstractMappedCommitter {
     public static final String DEFAULT_SOLR_CONTENT_FIELD = "content";
 
 
-    private SolrClientType solrClientType; 
+    private SolrClientType solrClientType;
     private String solrURL;
     private boolean solrCommitDisabled;
     private final Map<String, String> updateUrlParams = new HashMap<>();
     private String username;
     private String password;
     private EncryptionKey passwordKey;
-    
+
     private SolrClient solrClient;
-    
+
     /**
      * Constructor.
      */
@@ -280,7 +282,7 @@ public class SolrCommitter extends AbstractMappedCommitter {
     /**
      * Sets whether to send an explicit commit request at the end of every
      * batch, or let the server auto-commit.
-     * @param solrCommitDisabled <code>true</code> if sending Solr commit is 
+     * @param solrCommitDisabled <code>true</code> if sending Solr commit is
      *        disabled
      * @since 2.2.0
      */
@@ -351,20 +353,20 @@ public class SolrCommitter extends AbstractMappedCommitter {
     public void setPasswordKey(EncryptionKey passwordKey) {
         this.passwordKey = passwordKey;
     }
-    
+
     @Override
     protected void commitBatch(List<ICommitOperation> batch) {
 
-        LOG.info("Sending " + batch.size() 
+        LOG.info("Sending " + batch.size()
                 + " documents to Solr for update/deletion.");
         try {
             SolrClient solrClient = ensureSolrClient();
-            
+
             // Add to request all operations in batch, and force a commit
             // whenever we do a "delete" after an "add" to eliminate the
-            // risk of the delete being a no-op since added documents are 
+            // risk of the delete being a no-op since added documents are
             // not visible until committed (thus nothing to delete).
-            
+
             //TODO before a delete, check if the same reference was previously
             //added before forcing a commit if any additions occurred.
             boolean previousWasAddition = false;
@@ -375,34 +377,44 @@ public class SolrCommitter extends AbstractMappedCommitter {
                     previousWasAddition = true;
                 } else if (op instanceof IDeleteOperation) {
                     if (previousWasAddition && !isSolrCommitDisabled()) {
-                        solrClient.commit();
+                        solrCommit();
                     }
                     req = solrDeleteRequest((IDeleteOperation) op);
                     previousWasAddition = false;
                 } else {
                     throw new CommitterException("Unsupported operation:" + op);
                 }
-                
-                if (StringUtils.isNotBlank(getUsername())) {
-                    req.setBasicAuthCredentials(
-                            getUsername(), EncryptionUtil.decrypt(
-                                    getPassword(), getPasswordKey()));
-                }
+
+                setCredentials(req);
+
                 for (Entry<String, String> entry : updateUrlParams.entrySet()) {
                     req.setParam(entry.getKey(), entry.getValue());
                 }
-                solrClient.request(req);
+                req.process(solrClient);
             }
             if (!isSolrCommitDisabled()) {
-                solrClient.commit();
+                solrCommit();
             }
         } catch (Exception e) {
           throw new CommitterException(
                   "Cannot index document batch to Solr.", e);
         }
-        LOG.info("Done sending documents to Solr for update/deletion.");    
+        LOG.info("Done sending documents to Solr for update/deletion.");
     }
-    
+
+    private void setCredentials(UpdateRequest req) {
+        if (StringUtils.isNotBlank(getUsername())) {
+            req.setBasicAuthCredentials(getUsername(), EncryptionUtil.decrypt(
+                    getPassword(), getPasswordKey()));
+        }
+    }
+
+    private void solrCommit() throws IOException, SolrServerException {
+        UpdateRequest req = new UpdateRequest();
+        setCredentials(req);
+        req.commit(solrClient, null);
+    }
+
     protected UpdateRequest solrAddRequest(IAddOperation op) {
         UpdateRequest req = new UpdateRequest();
         req.add(buildSolrDocument(op.getMetadata()));
@@ -413,15 +425,15 @@ public class SolrCommitter extends AbstractMappedCommitter {
         req.deleteById(op.getReference());
         return req;
     }
-    
+
     private synchronized SolrClient ensureSolrClient() {
         if (solrClient == null) {
-            solrClient = ObjectUtils.defaultIfNull(solrClientType, 
+            solrClient = ObjectUtils.defaultIfNull(solrClientType,
                     SolrClientType.HTTP).create(solrURL);
         }
         return solrClient;
     }
-    
+
     private SolrInputDocument buildSolrDocument(Properties fields) {
         SolrInputDocument doc = new SolrInputDocument();
         for (String key : fields.keySet()) {
@@ -436,7 +448,7 @@ public class SolrCommitter extends AbstractMappedCommitter {
     @Override
     protected void saveToXML(XMLStreamWriter writer) throws XMLStreamException {
         EnhancedXMLStreamWriter w = new EnhancedXMLStreamWriter(writer);
-        
+
         if (solrClientType != null) {
             w.writeElementString("solrClientType", solrClientType.toString());
         }
@@ -462,13 +474,13 @@ public class SolrCommitter extends AbstractMappedCommitter {
                         key.getSource().name().toLowerCase());
             }
         }
-        
+
         w.writeEndElement();
     }
 
     @Override
     protected void loadFromXml(XMLConfiguration xml) {
-        
+
         String xmlSolrClientType = xml.getString("solrClientType", null);
         if (StringUtils.isNotBlank(xmlSolrClientType)) {
             setSolrClientType(SolrClientType.of(xmlSolrClientType));
@@ -476,7 +488,7 @@ public class SolrCommitter extends AbstractMappedCommitter {
         setSolrURL(xml.getString("solrURL", getSolrURL()));
         setSolrCommitDisabled(xml.getBoolean(
                 "solrCommitDisabled", isSolrCommitDisabled()));
-        List<HierarchicalConfiguration> uparams = 
+        List<HierarchicalConfiguration> uparams =
                 xml.configurationsAt("solrUpdateURLParams.param");
         for (HierarchicalConfiguration param : uparams) {
             setUpdateUrlParam(param.getString("[@name]"), param.getString(""));
@@ -532,7 +544,7 @@ public class SolrCommitter extends AbstractMappedCommitter {
             .append(passwordKey, other.passwordKey)
             .isEquals();
     }
-    
+
     @Override
     public String toString() {
         return new ToStringBuilder(this)
