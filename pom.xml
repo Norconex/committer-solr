@@ -32,7 +32,7 @@
   </description>
   
   <properties>
-    <solr.version>8.11.1</solr.version>
+    <solr.version>8.11.3</solr.version>
     <netty.version>4.1.72.Final</netty.version>
   </properties>
   <inceptionYear>2009</inceptionYear>
