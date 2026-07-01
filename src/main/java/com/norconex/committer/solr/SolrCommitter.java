@@ -58,7 +58,7 @@ import com.norconex.commons.lang.xml.XML;
  * Commits documents to Apache Solr.
  * </p>
  *
- * <h3>Solr Client:</h3>
+ * <h2>Solr Client:</h2>
  * <p>
  * As of 2.4.0, it is possible to specify which type of
  * <a href="https://lucene.apache.org/solr/guide/8_1/using-solrj.html#types-of-solrclients">
@@ -91,7 +91,7 @@ import com.norconex.commons.lang.xml.XML;
  *         experimental by Apache.</dd>
  * </dl>
  *
- * <h3>Authentication</h3>
+ * <h2>Authentication</h2>
  * <p>
  * Basic authentication is supported for password-protected
  * Solr installations.
@@ -375,6 +375,13 @@ public class SolrCommitter extends AbstractBatchCommitter {
         LOG.info("SolrClient closed.");
     }
 
+    /**
+     * Pushes the given Solr update request, optionally committing afterward.
+     * @param solrBatchRequest the Solr update request to push
+     * @throws SolrServerException if Solr returns an error
+     * @throws IOException if an I/O error occurs communicating with Solr
+     * @throws CommitterException if the response status is invalid
+     */
     protected void pushSolrRequest(UpdateRequest solrBatchRequest)
             throws SolrServerException, IOException, CommitterException {
 
@@ -394,6 +401,12 @@ public class SolrCommitter extends AbstractBatchCommitter {
         solrBatchRequest.clear();
     }
 
+    /**
+     * Adds an upsert operation to the given Solr batch request.
+     * @param solrBatchRequest the Solr update request to add to
+     * @param committerRequest the committer upsert request
+     * @throws CommitterException if the upsert cannot be prepared
+     */
     protected void addSolrUpsertRequest(
             UpdateRequest solrBatchRequest, UpsertRequest committerRequest)
                     throws CommitterException {
@@ -403,12 +416,22 @@ public class SolrCommitter extends AbstractBatchCommitter {
         CommitterUtil.applyTargetContent(committerRequest, targetContentField);
         solrBatchRequest.add(buildSolrDocument(committerRequest.getMetadata()));
     }
+    /**
+     * Adds a delete operation to the given Solr batch request.
+     * @param solrBatchRequest the Solr update request to add to
+     * @param committerRequest the committer delete request
+     */
     protected void addSolrDeleteRequest(
             UpdateRequest solrBatchRequest, DeleteRequest committerRequest) {
         CommitterUtil.applyTargetId(
                 committerRequest, sourceIdField, targetIdField);
         solrBatchRequest.deleteById(committerRequest.getReference());
     }
+    /**
+     * Builds a Solr input document from the given field properties.
+     * @param fields document fields and their values
+     * @return Solr input document
+     */
     protected SolrInputDocument buildSolrDocument(Properties fields) {
         SolrInputDocument doc = new SolrInputDocument();
         for (String key : fields.keySet()) {

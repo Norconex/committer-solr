@@ -38,15 +38,19 @@ import org.apache.solr.client.solrj.impl.LBHttpSolrClient;
  */
 public enum SolrClientType {
 
+    /** Direct access to a single Solr node via HTTP. Default client type. */
     HTTP("HttpSolrClient", url -> new HttpSolrClient.Builder(url).build()),
 
+    /** Simple load-balancing across multiple Solr nodes via HTTP. */
     LB_HTTP("LBHttpSolrClient",
             url -> new LBHttpSolrClient.Builder().withBaseSolrUrls(
                     url.split("[,\\s]+")).build()),
 
+    /** Optimized for high-volume upserts to a single Solr node. */
     CONCURRENT_UPDATE("ConcurrentUpdateSolrClient",
             url -> new ConcurrentUpdateSolrClient.Builder(url).build()),
 
+    /** Client for use with a SolrCloud cluster via ZooKeeper hosts. */
     CLOUD("CloudSolrClient", url -> {
         List<String> urls = Arrays.asList(url.split("[,\\s]+"));
         if (url.startsWith("http")) {
@@ -54,11 +58,15 @@ public enum SolrClientType {
         }
         return new CloudSolrClient.Builder(urls, Optional.empty()).build();
     }),
+
+    /** HTTP/2 variant of {@link #HTTP} (experimental). */
     HTTP2("Http2SolrClient", (url) -> new Http2SolrClient.Builder(url).build()),
 
+    /** HTTP/2 variant of {@link #LB_HTTP} (experimental). */
     LB_HTTP2("LBHttp2SolrClient", url -> new LBHttp2SolrClient(
             new Http2SolrClient.Builder().build(), url.split("[,\\s]+"))),
 
+    /** HTTP/2 variant of {@link #CONCURRENT_UPDATE} (experimental). */
     CONCURRENT_UPDATE_HTTP2("ConcurrentUpdateHttp2SolrClient", url ->
             new ConcurrentUpdateHttp2SolrClient.Builder(
                     url, new Http2SolrClient.Builder().build()).build())
@@ -76,11 +84,22 @@ public enum SolrClientType {
         return type;
     }
 
+    /**
+     * Creates a {@link SolrClient} for the given Solr URL.
+     * @param solrURL the Solr URL (or comma-separated URLs where applicable)
+     * @return a new SolrClient instance
+     */
     public SolrClient create(String solrURL) {
         Objects.requireNonNull(solrURL, "'solrURL' must not be null.");
         return clientFactory.apply(solrURL);
     }
 
+    /**
+     * Returns the {@code SolrClientType} matching the given type string
+     * (case-insensitive), or {@code null} if none match.
+     * @param type the client type name (e.g. "HttpSolrClient")
+     * @return matching SolrClientType, or {@code null}
+     */
     public static SolrClientType of(String type) {
         if (type == null) {
             return null;
